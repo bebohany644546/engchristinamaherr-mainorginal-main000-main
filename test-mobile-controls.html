@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>اختبار تحكم الفيديو على الموبايل</title>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 15px;
+            border: 2px solid #f59e0b;
+        }
+        
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .device-type {
+            text-align: center;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .video-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #f59e0b;
+        }
+        
+        .mobile-player .controls-overlay {
+            transition: opacity 0.3s ease;
+        }
+
+        .mobile-player .controls-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .mobile-player .controls-overlay:not(.show) {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .controls-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 15px;
+            transition: opacity 0.3s ease;
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245, 158, 11, 0.9);
+            color: #1e293b;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-width: 44px;
+            min-height: 44px;
+        }
+        
+        .play-button:hover {
+            background: #f59e0b;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            margin-bottom: 15px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #f59e0b;
+            border-radius: 6px;
+            width: 30%;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .progress-thumb {
+            position: absolute;
+            right: -10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: #f59e0b;
+            border: 3px solid white;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .time-display {
+            font-family: monospace;
+            font-size: 14px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 12px;
+            border-radius: 6px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .fullscreen-btn {
+            background: rgba(15, 23, 42, 0.8);
+            color: #f59e0b;
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(15, 23, 42, 1);
+            transform: scale(1.1);
+        }
+        
+        .test-info {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .test-info h3 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+        
+        .test-info ul {
+            margin: 0;
+            padding-right: 20px;
+        }
+        
+        .test-info li {
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .status.success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #f59e0b;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 اختبار تحكم الفيديو على الموبايل</h1>
+        
+        <div class="device-type" id="deviceType">
+            جاري كشف نوع الجهاز...
+        </div>
+        
+        <div class="video-player mobile-player" id="videoPlayer">
+            <button class="play-button" id="playBtn">▶️</button>
+            
+            <div class="controls-overlay show" id="controlsOverlay">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill">
+                        <div class="progress-thumb"></div>
+                    </div>
+                </div>
+                
+                <div class="controls-row">
+                    <div class="time-display" id="timeDisplay">0:00 / 3:45</div>
+                    <button class="fullscreen-btn" id="fullscreenBtn">⛶</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-info">
+            <h3>حالة التحكم:</h3>
+            <ul id="statusList">
+                <li><span class="status success">✓</span> التحكم يختفي بعد ثانيتين على الموبايل</li>
+                <li><span class="status success">✓</span> يظهر عند اللمس مجدداً</li>
+                <li><span class="status success">✓</span> أزرار كبيرة سهلة اللمس</li>
+                <li><span class="status success">✓</span> شريط تقدم محسن للمس</li>
+            </ul>
+        </div>
+        
+        <div class="test-info">
+            <h3>تعليمات الاختبار:</h3>
+            <ul>
+                <li>🎯 المس أي مكان في الفيديو - يظهر التحكم لمدة ثانيتين</li>
+                <li>⏰ انتظر ثانيتين بدون لمس - يجب أن يختفي التحكم</li>
+                <li>👆 المس الشاشة مجدداً - يظهر التحكم مرة أخرى</li>
+                <li>▶️ اضغط زر التشغيل - التحكم يختفي بعد ثانيتين</li>
+                <li>📊 حرك شريط التقدم - يستجيب للمس ويختفي بعد ثانيتين</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // كشف نوع الجهاز
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            isMobile = /android|webos|iphone|ipod|blackberry|iemobile|opera mini/i.test(userAgent) ||
+                      (window.innerWidth <= 768 && 'ontouchstart' in window);
+            const isTablet = /ipad|android(?!.*mobile)|tablet/i.test(userAgent) ||
+                            (window.innerWidth > 768 && window.innerWidth <= 1024 && 'ontouchstart' in window);
+            const touchSupport = 'ontouchstart' in window;
+            
+            let deviceText = '';
+            if (isMobile) {
+                deviceText = '📱 جهاز موبايل - التحكم يظهر دائماً';
+            } else if (isTablet) {
+                deviceText = '📟 جهاز تابلت - التحكم يظهر دائماً';
+            } else {
+                deviceText = '🖥️ جهاز كمبيوتر - التحكم يظهر عند hover';
+            }
+            
+            if (touchSupport) {
+                deviceText += ' (دعم اللمس: نعم)';
+            }
+            
+            document.getElementById('deviceType').textContent = deviceText;
+            
+            // تطبيق الفئة المناسبة
+            const videoPlayer = document.getElementById('videoPlayer');
+            if (isMobile) {
+                videoPlayer.className = 'video-player mobile-player';
+            } else if (isTablet) {
+                videoPlayer.className = 'video-player tablet-player';
+            } else {
+                videoPlayer.className = 'video-player desktop-player';
+            }
+        }
+        
+        // متغيرات التحكم
+        let isPlaying = false;
+        let isFullscreen = false;
+        let progress = 30;
+        let hideTimeout = null;
+        let isMobile = false;
+        
+        // وظيفة إظهار التحكم مع مؤقت الإخفاء
+        function showControlsWithTimer() {
+            const overlay = document.getElementById('controlsOverlay');
+            overlay.classList.add('show');
+
+            // إلغاء المؤقت السابق
+            if (hideTimeout) {
+                clearTimeout(hideTimeout);
+            }
+
+            // إخفاء بعد ثانيتين على الموبايل
+            if (isMobile) {
+                hideTimeout = setTimeout(() => {
+                    overlay.classList.remove('show');
+                }, 2000);
+            }
+        }
+
+        // أحداث التحكم
+        document.getElementById('playBtn').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '⏸️' : '▶️';
+
+            // إظهار التحكم مع مؤقت
+            showControlsWithTimer();
+        });
+        
+        document.getElementById('progressBar').addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width * 100;
+            progress = Math.max(0, Math.min(100, percent));
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            // إظهار التحكم مع مؤقت
+            showControlsWithTimer();
+        });
+        
+        document.getElementById('fullscreenBtn').addEventListener('click', function() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const overlay = document.getElementById('controlsOverlay');
+            
+            if (!isFullscreen) {
+                // دخول ملء الشاشة
+                if (videoPlayer.requestFullscreen) {
+                    videoPlayer.requestFullscreen();
+                }
+                videoPlayer.classList.add('fullscreen');
+                overlay.classList.remove('show');
+                isFullscreen = true;
+                this.textContent = '⛶';
+                
+                // إظهار التحكم بعد 3 ثوان
+                setTimeout(() => {
+                    overlay.classList.add('show');
+                }, 3000);
+            } else {
+                // خروج من ملء الشاشة
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+                videoPlayer.classList.remove('fullscreen');
+                overlay.classList.add('show');
+                isFullscreen = false;
+                this.textContent = '⛶';
+            }
+        });
+        
+        // لمس الفيديو لإظهار التحكم
+        document.getElementById('videoPlayer').addEventListener('click', function() {
+            showControlsWithTimer();
+        });
+        
+        // تحديث شريط التقدم تلقائياً
+        setInterval(() => {
+            if (isPlaying && progress < 100) {
+                progress += 0.5;
+                document.getElementById('progressFill').style.width = progress + '%';
+                
+                // تحديث الوقت
+                const currentTime = Math.floor(progress * 225 / 100); // 3:45 = 225 ثانية
+                const minutes = Math.floor(currentTime / 60);
+                const seconds = currentTime % 60;
+                const timeText = `${minutes}:${seconds.toString().padStart(2, '0')} / 3:45`;
+                document.getElementById('timeDisplay').textContent = timeText;
+            }
+        }, 100);
+        
+        // تهيئة
+        detectDevice();
+
+        // بدء مؤقت الإخفاء للموبايل
+        if (isMobile) {
+            showControlsWithTimer();
+        }
+
+        // إعادة كشف عند تغيير الحجم
+        window.addEventListener('resize', detectDevice);
+        window.addEventListener('orientationchange', detectDevice);
+    </script>
+</body>
+</html>

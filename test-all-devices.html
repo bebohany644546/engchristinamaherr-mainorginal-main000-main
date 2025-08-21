@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>اختبار دعم جميع الأجهزة</title>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .device-info {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 6px;
+        }
+        
+        .video-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #f59e0b;
+        }
+        
+        .controls-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 15px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .video-player:hover .controls-overlay,
+        .video-player.touch-active .controls-overlay {
+            opacity: 1;
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245, 158, 11, 0.9);
+            color: #1e293b;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .play-button:hover {
+            background: #f59e0b;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #f59e0b;
+            border-radius: 3px;
+            width: 30%;
+            transition: width 0.3s ease;
+        }
+        
+        .controls-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .time-display {
+            font-family: monospace;
+            font-size: 12px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+        
+        .fullscreen-btn {
+            background: rgba(15, 23, 42, 0.8);
+            color: #f59e0b;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+        }
+        
+        .fullscreen-btn:hover {
+            background: rgba(15, 23, 42, 1);
+            transform: scale(1.1);
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .test-btn {
+            background: #f59e0b;
+            color: #1e293b;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
+        }
+        
+        .test-btn:hover {
+            background: #fbbf24;
+            transform: scale(1.02);
+        }
+        
+        .test-btn:active {
+            transform: scale(0.98);
+        }
+        
+        /* تحسينات للموبايل */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                margin: 5px;
+            }
+            
+            .play-button {
+                width: 70px;
+                height: 70px;
+                font-size: 28px;
+            }
+            
+            .progress-bar {
+                height: 8px;
+            }
+            
+            .fullscreen-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* تحسينات للتابلت */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .play-button {
+                width: 65px;
+                height: 65px;
+                font-size: 26px;
+            }
+            
+            .progress-bar {
+                height: 7px;
+            }
+            
+            .fullscreen-btn {
+                width: 42px;
+                height: 42px;
+                font-size: 19px;
+            }
+        }
+        
+        /* تحسينات خاصة بـ iOS */
+        @supports (-webkit-touch-callout: none) {
+            .video-player {
+                -webkit-playsinline: true;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 اختبار دعم جميع الأجهزة</h1>
+        
+        <div class="device-info">
+            <h3 style="color: #f59e0b; margin-bottom: 15px;">معلومات الجهاز:</h3>
+            <div class="info-grid" id="deviceInfo">
+                <!-- سيتم ملؤها بـ JavaScript -->
+            </div>
+        </div>
+        
+        <div class="video-player" id="videoPlayer">
+            <button class="play-button" id="playBtn">▶️</button>
+            
+            <div class="controls-overlay">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                
+                <div class="controls-row">
+                    <div class="time-display" id="timeDisplay">0:00 / 3:45</div>
+                    <button class="fullscreen-btn" id="fullscreenBtn">⛶</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testTouch()">اختبار اللمس</button>
+            <button class="test-btn" onclick="testFullscreen()">اختبار ملء الشاشة</button>
+            <button class="test-btn" onclick="testOrientation()">اختبار الدوران</button>
+            <button class="test-btn" onclick="testPerformance()">اختبار الأداء</button>
+        </div>
+        
+        <div id="testResults" style="margin-top: 20px; padding: 15px; background: rgba(30, 41, 59, 0.5); border-radius: 8px; display: none;">
+            <h4 style="color: #f59e0b;">نتائج الاختبار:</h4>
+            <div id="resultsContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // كشف معلومات الجهاز
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            
+            const deviceInfo = {
+                'نوع الجهاز': getMobileType(),
+                'نظام التشغيل': getOS(),
+                'المتصفح': getBrowser(),
+                'دعم اللمس': 'ontouchstart' in window ? 'نعم' : 'لا',
+                'حجم الشاشة': `${window.innerWidth} × ${window.innerHeight}`,
+                'نسبة البكسل': window.devicePixelRatio || 1,
+                'الاتجاه': window.innerWidth > window.innerHeight ? 'أفقي' : 'عمودي'
+            };
+            
+            const infoContainer = document.getElementById('deviceInfo');
+            infoContainer.innerHTML = '';
+            
+            Object.entries(deviceInfo).forEach(([key, value]) => {
+                const item = document.createElement('div');
+                item.className = 'info-item';
+                item.innerHTML = `<span>${key}:</span><span style="color: #f59e0b;">${value}</span>`;
+                infoContainer.appendChild(item);
+            });
+        }
+        
+        function getMobileType() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (/iphone|ipod/i.test(userAgent)) return 'iPhone';
+            if (/ipad/i.test(userAgent)) return 'iPad';
+            if (/android.*mobile/i.test(userAgent)) return 'Android Phone';
+            if (/android/i.test(userAgent)) return 'Android Tablet';
+            if (window.innerWidth <= 768) return 'Mobile';
+            if (window.innerWidth <= 1024) return 'Tablet';
+            return 'Desktop';
+        }
+        
+        function getOS() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (/iphone|ipad|ipod/i.test(userAgent)) return 'iOS';
+            if (/android/i.test(userAgent)) return 'Android';
+            if (/windows/i.test(userAgent)) return 'Windows';
+            if (/macintosh|mac os x/i.test(userAgent)) return 'macOS';
+            if (/linux/i.test(userAgent)) return 'Linux';
+            return 'Unknown';
+        }
+        
+        function getBrowser() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            if (/safari/i.test(userAgent) && !/chrome|chromium|edg/i.test(userAgent)) return 'Safari';
+            if (/chrome|chromium/i.test(userAgent) && !/edg/i.test(userAgent)) return 'Chrome';
+            if (/firefox/i.test(userAgent)) return 'Firefox';
+            if (/edg/i.test(userAgent)) return 'Edge';
+            return 'Unknown';
+        }
+        
+        // اختبارات التفاعل
+        let isPlaying = false;
+        
+        function testTouch() {
+            showResults('اختبار اللمس', 'تم اكتشاف اللمس بنجاح! ✅');
+        }
+        
+        function testFullscreen() {
+            const elem = document.getElementById('videoPlayer');
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+                showResults('اختبار ملء الشاشة', 'تم تفعيل ملء الشاشة بنجاح! ✅');
+            } else {
+                showResults('اختبار ملء الشاشة', 'ملء الشاشة غير مدعوم في هذا المتصفح ❌');
+            }
+        }
+        
+        function testOrientation() {
+            const orientation = window.innerWidth > window.innerHeight ? 'أفقي' : 'عمودي';
+            showResults('اختبار الدوران', `الاتجاه الحالي: ${orientation}`);
+        }
+        
+        function testPerformance() {
+            const start = performance.now();
+            for (let i = 0; i < 100000; i++) {
+                // محاكاة عملية
+            }
+            const end = performance.now();
+            const time = (end - start).toFixed(2);
+            showResults('اختبار الأداء', `وقت التنفيذ: ${time} مللي ثانية`);
+        }
+        
+        function showResults(title, content) {
+            const resultsDiv = document.getElementById('testResults');
+            const contentDiv = document.getElementById('resultsContent');
+            contentDiv.innerHTML = `<strong>${title}:</strong> ${content}`;
+            resultsDiv.style.display = 'block';
+        }
+        
+        // إعداد الأحداث
+        document.getElementById('playBtn').addEventListener('click', function() {
+            isPlaying = !isPlaying;
+            this.textContent = isPlaying ? '⏸️' : '▶️';
+            document.getElementById('videoPlayer').classList.toggle('touch-active');
+        });
+        
+        document.getElementById('progressBar').addEventListener('click', function(e) {
+            const rect = this.getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width * 100;
+            document.getElementById('progressFill').style.width = percent + '%';
+        });
+        
+        // تحديث معلومات الجهاز عند تغيير الحجم
+        window.addEventListener('resize', detectDevice);
+        window.addEventListener('orientationchange', detectDevice);
+        
+        // تهيئة
+        detectDevice();
+    </script>
+</body>
+</html>

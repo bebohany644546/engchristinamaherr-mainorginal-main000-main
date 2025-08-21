@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار شريط التحكم الموحد</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 30px;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+        }
+        .video-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .controls-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 20px;
+        }
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .volume-control {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .volume-btn {
+            background: rgba(15, 23, 42, 0.8);
+            color: #f59e0b;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        .volume-btn:hover {
+            background: rgba(15, 23, 42, 1);
+            transform: scale(1.1);
+        }
+        .volume-slider-container {
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            margin-bottom: 8px;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(8px);
+            transition: all 0.2s ease;
+            z-index: 1000;
+        }
+        .volume-slider-container.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .volume-slider-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .volume-title {
+            font-size: 14px;
+            color: #f59e0b;
+            font-weight: 600;
+        }
+        .volume-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .volume-slider {
+            width: 128px;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .volume-slider::-webkit-slider-track {
+            width: 100%;
+            height: 8px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            cursor: pointer;
+            border: 3px solid white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+            transition: all 0.2s ease;
+        }
+        .volume-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.7);
+        }
+        .volume-display {
+            font-size: 14px;
+            color: white;
+            font-family: monospace;
+            font-weight: bold;
+            min-width: 48px;
+            text-align: center;
+        }
+        .fullscreen-btn {
+            background: rgba(15, 23, 42, 0.8);
+            color: #f59e0b;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+        }
+        .fullscreen-btn:hover {
+            background: rgba(15, 23, 42, 1);
+            transform: scale(1.1);
+        }
+        .demo-text {
+            text-align: center;
+            color: #94a3b8;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        @media (max-width: 768px) {
+            .volume-slider {
+                width: 128px !important;
+                height: 8px !important;
+            }
+            .volume-slider::-webkit-slider-thumb {
+                height: 20px !important;
+                width: 20px !important;
+            }
+            .volume-title {
+                font-size: 14px;
+            }
+            .volume-display {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔊 شريط التحكم الموحد</h1>
+        
+        <div class="video-player">
+            <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #666; font-size: 48px;">
+                ▶️
+            </div>
+            
+            <div class="controls-overlay">
+                <div class="controls-row">
+                    <div class="volume-control">
+                        <button class="volume-btn" id="volumeBtn" onmouseenter="showVolumeSlider()" onclick="toggleMute()">
+                            🔊
+                        </button>
+                        
+                        <div class="volume-slider-container" id="volumeSliderContainer" 
+                             onmouseenter="showVolumeSlider()" 
+                             onmouseleave="hideVolumeSlider()">
+                            <div class="volume-slider-content">
+                                <div class="volume-title">مستوى الصوت</div>
+                                <div class="volume-slider-row">
+                                    <input type="range" min="0" max="100" value="75" 
+                                           class="volume-slider" id="volumeSlider">
+                                    <span class="volume-display" id="volumeDisplay">75%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button class="fullscreen-btn">
+                        ⛶
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-text">
+            <p>🖱️ مرر الماوس فوق زر الصوت لإظهار شريط التحكم</p>
+            <p>📱 على الموبايل: شريط أكبر وأسهل للمس</p>
+            <p>🖥️ على الديسكتوب: شريط مدمج وأنيق</p>
+        </div>
+    </div>
+
+    <script>
+        let currentVolume = 75;
+        let isMuted = false;
+        let volumeBeforeMute = 75;
+        let hideTimeout;
+
+        const volumeBtn = document.getElementById('volumeBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        const volumeSliderContainer = document.getElementById('volumeSliderContainer');
+
+        function updateVolumeDisplay(volume) {
+            currentVolume = volume;
+            
+            // تحديث النص
+            if (isMuted) {
+                volumeDisplay.textContent = '0%';
+                volumeBtn.textContent = '🔇';
+            } else {
+                volumeDisplay.textContent = `${volume}%`;
+                volumeBtn.textContent = '🔊';
+            }
+            
+            // تحديث الشريط
+            volumeSlider.value = isMuted ? 0 : volume;
+            
+            // تحديث لون الشريط
+            const percentage = isMuted ? 0 : volume;
+            volumeSlider.style.background = `linear-gradient(to right, #f59e0b 0%, #f59e0b ${percentage}%, rgba(255,255,255,0.3) ${percentage}%, rgba(255,255,255,0.3) 100%)`;
+        }
+
+        function toggleMute() {
+            if (isMuted) {
+                isMuted = false;
+                updateVolumeDisplay(volumeBeforeMute);
+            } else {
+                volumeBeforeMute = currentVolume;
+                isMuted = true;
+                updateVolumeDisplay(currentVolume);
+            }
+        }
+
+        function showVolumeSlider() {
+            clearTimeout(hideTimeout);
+            volumeSliderContainer.classList.add('show');
+        }
+
+        function hideVolumeSlider() {
+            hideTimeout = setTimeout(() => {
+                volumeSliderContainer.classList.remove('show');
+            }, 200);
+        }
+
+        // ربط الأحداث
+        volumeSlider.addEventListener('input', function() {
+            const volume = parseInt(this.value);
+            if (volume > 0 && isMuted) {
+                isMuted = false;
+            }
+            updateVolumeDisplay(volume);
+        });
+
+        volumeBtn.addEventListener('mouseenter', showVolumeSlider);
+
+        // تهيئة العرض
+        updateVolumeDisplay(75);
+    </script>
+</body>
+</html>

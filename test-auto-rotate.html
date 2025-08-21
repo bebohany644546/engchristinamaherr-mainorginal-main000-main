@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>اختبار الدوران التلقائي للوضع الأفقي</title>
+    <style>
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 10px;
+            min-height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        body.ios-fullscreen-active {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 100% !important;
+            overflow: hidden !important;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 15px;
+            border: 2px solid #f59e0b;
+        }
+        
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .orientation-info {
+            text-align: center;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .video-player {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #f59e0b;
+            transition: all 0.3s ease;
+        }
+        
+        .video-player.ios-fullscreen {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            background: black !important;
+            border-radius: 0 !important;
+            border: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            transition: transform 0.3s ease-in-out !important;
+        }
+        
+        /* دوران تلقائي للوضع العمودي */
+        @media screen and (orientation: portrait) {
+            .video-player.ios-fullscreen {
+                transform: rotate(90deg);
+                transform-origin: center center;
+                width: 100vh;
+                height: 100vw;
+                left: 50%;
+                top: 50%;
+                margin-left: -50vh;
+                margin-top: -50vw;
+            }
+        }
+        
+        @media screen and (orientation: landscape) {
+            .video-player.ios-fullscreen {
+                transform: none;
+                width: 100vw;
+                height: 100vh;
+                left: 0;
+                top: 0;
+                margin: 0;
+            }
+        }
+        
+        .play-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(245, 158, 11, 0.9);
+            color: #1e293b;
+            border: none;
+            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .fullscreen-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.8);
+            color: #f59e0b;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+        
+        .test-info {
+            background: rgba(30, 41, 59, 0.5);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        
+        .test-info h3 {
+            color: #f59e0b;
+            margin-bottom: 10px;
+        }
+        
+        .test-info ul {
+            margin: 0;
+            padding-right: 20px;
+        }
+        
+        .test-info li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .status.success {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .status.warning {
+            background: #f59e0b;
+            color: #1e293b;
+        }
+        
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .test-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .test-btn {
+            background: #f59e0b;
+            color: #1e293b;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            touch-action: manipulation;
+            min-height: 44px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 اختبار الدوران التلقائي</h1>
+        
+        <div class="orientation-info" id="orientationInfo">
+            جاري كشف اتجاه الشاشة...
+        </div>
+        
+        <div class="test-buttons">
+            <button class="test-btn" onclick="testFullscreen()">ملء الشاشة</button>
+            <button class="test-btn" onclick="testRotation()">اختبار الدوران</button>
+        </div>
+        
+        <div class="video-player" id="videoPlayer">
+            <button class="play-button" id="playBtn">▶️</button>
+            <button class="fullscreen-btn" id="fullscreenBtn">⛶</button>
+            
+            <div style="position: absolute; bottom: 60px; left: 20px; color: white; font-size: 14px;">
+                <div>العرض: <span id="widthDisplay">-</span>px</div>
+                <div>الطول: <span id="heightDisplay">-</span>px</div>
+                <div>الاتجاه: <span id="orientationDisplay">-</span></div>
+            </div>
+        </div>
+        
+        <div class="test-info">
+            <h3>حالة الاختبار:</h3>
+            <ul id="statusList">
+                <li id="deviceStatus">🔍 جاري كشف الجهاز...</li>
+                <li id="orientationStatus">📱 الاتجاه: غير محدد</li>
+                <li id="fullscreenStatus">⛶ ملء الشاشة: غير نشط</li>
+                <li id="rotationStatus">🔄 الدوران: غير مطبق</li>
+            </ul>
+        </div>
+        
+        <div class="test-info">
+            <h3>تعليمات الاختبار:</h3>
+            <ul>
+                <li>📱 تأكد أنك تستخدم جهاز محمول (iPhone/Android)</li>
+                <li>⛶ اضغط زر ملء الشاشة</li>
+                <li>🔄 يجب أن تدور الشاشة تلقائياً للوضع الأفقي</li>
+                <li>📐 جرب تدوير الجهاز يدوياً لرؤية التأثير</li>
+                <li>🚪 للخروج: اضغط زر الخروج أو اسحب من الأعلى</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let isFullscreen = false;
+        let isIOS = false;
+        let currentOrientation = '';
+        
+        // كشف نوع الجهاز
+        function detectDevice() {
+            const userAgent = navigator.userAgent.toLowerCase();
+            isIOS = /iphone|ipad|ipod/i.test(userAgent) || 
+                   (/macintosh/i.test(userAgent) && 'ontouchstart' in window);
+            
+            const deviceStatus = document.getElementById('deviceStatus');
+            if (isIOS) {
+                deviceStatus.innerHTML = '🍎 جهاز iOS مكتشف <span class="status success">✓</span>';
+            } else {
+                deviceStatus.innerHTML = '🤖 جهاز Android/أخرى <span class="status warning">⚠</span>';
+            }
+        }
+        
+        // تحديث معلومات الاتجاه
+        function updateOrientationInfo() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const orientation = width > height ? 'أفقي (Landscape)' : 'عمودي (Portrait)';
+            
+            document.getElementById('widthDisplay').textContent = width;
+            document.getElementById('heightDisplay').textContent = height;
+            document.getElementById('orientationDisplay').textContent = orientation;
+            document.getElementById('orientationInfo').textContent = `الاتجاه الحالي: ${orientation} (${width}×${height})`;
+            
+            const orientationStatus = document.getElementById('orientationStatus');
+            orientationStatus.innerHTML = `📱 الاتجاه: ${orientation} <span class="status ${width > height ? 'success' : 'warning'}">${width > height ? '✓' : '⚠'}</span>`;
+            
+            currentOrientation = orientation;
+        }
+        
+        // اختبار ملء الشاشة مع الدوران
+        function testFullscreen() {
+            const videoPlayer = document.getElementById('videoPlayer');
+            const fullscreenStatus = document.getElementById('fullscreenStatus');
+            const rotationStatus = document.getElementById('rotationStatus');
+            
+            if (!isFullscreen) {
+                // دخول ملء الشاشة
+                videoPlayer.classList.add('ios-fullscreen');
+                document.body.classList.add('ios-fullscreen-active');
+                
+                // محاولة قفل الاتجاه
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').then(() => {
+                        rotationStatus.innerHTML = '🔄 الدوران: مقفل أفقياً <span class="status success">✓</span>';
+                    }).catch(err => {
+                        rotationStatus.innerHTML = '🔄 الدوران: CSS فقط <span class="status warning">⚠</span>';
+                        console.log('Orientation lock failed:', err);
+                    });
+                } else {
+                    rotationStatus.innerHTML = '🔄 الدوران: CSS فقط <span class="status warning">⚠</span>';
+                }
+                
+                fullscreenStatus.innerHTML = '⛶ ملء الشاشة: نشط <span class="status success">✓</span>';
+                isFullscreen = true;
+                
+                // إخفاء شريط العنوان
+                setTimeout(() => {
+                    if (window.scrollTo) {
+                        window.scrollTo(0, 1);
+                        setTimeout(() => window.scrollTo(0, 0), 50);
+                    }
+                }, 100);
+                
+            } else {
+                // خروج من ملء الشاشة
+                videoPlayer.classList.remove('ios-fullscreen');
+                document.body.classList.remove('ios-fullscreen-active');
+                
+                // إلغاء قفل الاتجاه
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+                
+                fullscreenStatus.innerHTML = '⛶ ملء الشاشة: غير نشط <span class="status warning">⚠</span>';
+                rotationStatus.innerHTML = '🔄 الدوران: غير مطبق <span class="status warning">⚠</span>';
+                isFullscreen = false;
+            }
+        }
+        
+        // اختبار الدوران
+        function testRotation() {
+            if (screen.orientation && screen.orientation.lock) {
+                const currentOrientation = window.innerWidth > window.innerHeight ? 'portrait' : 'landscape';
+                screen.orientation.lock(currentOrientation).then(() => {
+                    alert('تم قفل الاتجاه بنجاح!');
+                }).catch(err => {
+                    alert('فشل في قفل الاتجاه: ' + err.message);
+                });
+            } else {
+                alert('قفل الاتجاه غير مدعوم في هذا المتصفح');
+            }
+        }
+        
+        // ربط الأحداث
+        document.getElementById('fullscreenBtn').addEventListener('click', testFullscreen);
+        document.getElementById('fullscreenBtn').addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            testFullscreen();
+        });
+        
+        // معالج تغيير الاتجاه
+        function handleOrientationChange() {
+            setTimeout(updateOrientationInfo, 100);
+        }
+        
+        // إضافة معالجات الأحداث
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', handleOrientationChange);
+        
+        // تهيئة
+        detectDevice();
+        updateOrientationInfo();
+        
+        // تحديث دوري للمعلومات
+        setInterval(updateOrientationInfo, 1000);
+    </script>
+</body>
+</html>

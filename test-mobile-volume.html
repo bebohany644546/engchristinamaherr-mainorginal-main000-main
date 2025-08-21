@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار شريط الصوت العمودي للموبايل</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 20px;
+            border: 2px solid #f59e0b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.5rem;
+        }
+        .volume-control {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            text-align: center;
+        }
+        .vertical-volume {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .volume-track {
+            position: relative;
+            height: 180px;
+            width: 44px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 22px;
+            border: 2px solid rgba(245, 158, 11, 0.5);
+            display: flex;
+            align-items: end;
+            justify-content: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .volume-fill {
+            width: 36px;
+            background: linear-gradient(to top, #f59e0b, #fbbf24, #fde047);
+            border-radius: 18px;
+            transition: height 0.3s ease;
+            margin-bottom: 4px;
+            box-shadow: 0 0 15px rgba(245, 158, 11, 0.6);
+            position: relative;
+        }
+        .volume-marks {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 12px 4px;
+            pointer-events: none;
+        }
+        .volume-mark {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            width: 100%;
+        }
+        .volume-mark-line {
+            width: 12px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 1px;
+        }
+        .volume-mark-text {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-left: 6px;
+            font-weight: bold;
+            font-family: monospace;
+        }
+        .volume-slider {
+            position: absolute;
+            height: 180px;
+            width: 44px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+            z-index: 10;
+            transform: rotate(-90deg);
+            transform-origin: center;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            cursor: pointer;
+            border: 5px solid white;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+            transform: rotate(90deg);
+            transition: all 0.2s ease;
+        }
+        .volume-slider::-webkit-slider-thumb:hover {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            transform: rotate(90deg) scale(1.3);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.8);
+        }
+        .volume-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            background: rgba(245, 158, 11, 0.2);
+            padding: 12px 20px;
+            border-radius: 12px;
+            border: 1px solid #f59e0b;
+            backdrop-filter: blur(5px);
+        }
+        .volume-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 20px;
+        }
+        .volume-btn {
+            background: #1e293b;
+            color: white;
+            border: 1px solid #f59e0b;
+            padding: 12px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            font-weight: bold;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .volume-btn:hover {
+            background: #f59e0b;
+            color: #1e293b;
+            transform: scale(1.05);
+        }
+        .volume-btn.active {
+            background: #f59e0b;
+            color: #1e293b;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+        }
+        .mute-btn {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            width: 100%;
+            min-height: 48px;
+        }
+        .mute-btn:hover {
+            background: #b91c1c;
+            transform: scale(1.02);
+        }
+        .mute-btn.muted {
+            background: #059669;
+        }
+        .mute-btn.muted:hover {
+            background: #047857;
+        }
+        .close-btn {
+            background: #374151;
+            color: white;
+            border: 1px solid #6b7280;
+            padding: 12px 24px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            width: 100%;
+            min-height: 44px;
+        }
+        .close-btn:hover {
+            background: #4b5563;
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔊 شريط التحكم العمودي</h1>
+        
+        <div class="volume-control">
+            <div class="text-sm" style="color: #f59e0b; font-weight: bold; margin-bottom: 20px;">
+                🔊 التحكم في الصوت
+            </div>
+            
+            <div class="vertical-volume">
+                <div class="volume-track">
+                    <div class="volume-fill" id="volumeFill"></div>
+                    
+                    <div class="volume-marks">
+                        <div class="volume-mark">
+                            <div class="volume-mark-line"></div>
+                            <span class="volume-mark-text">100</span>
+                        </div>
+                        <div class="volume-mark">
+                            <div class="volume-mark-line"></div>
+                            <span class="volume-mark-text">75</span>
+                        </div>
+                        <div class="volume-mark">
+                            <div class="volume-mark-line"></div>
+                            <span class="volume-mark-text">50</span>
+                        </div>
+                        <div class="volume-mark">
+                            <div class="volume-mark-line"></div>
+                            <span class="volume-mark-text">25</span>
+                        </div>
+                        <div class="volume-mark">
+                            <div class="volume-mark-line"></div>
+                            <span class="volume-mark-text">0</span>
+                        </div>
+                    </div>
+                    
+                    <input type="range" min="0" max="100" value="75" class="volume-slider" id="verticalSlider">
+                </div>
+                
+                <div class="volume-display" id="volumeDisplay">🔊 75%</div>
+                
+                <button class="mute-btn" id="muteBtn" onclick="toggleMute()">🔊 كتم الصوت</button>
+            </div>
+            
+            <div class="volume-buttons">
+                <button class="volume-btn" onclick="setVolume(25)">🔈 25%</button>
+                <button class="volume-btn" onclick="setVolume(50)">🔉 50%</button>
+                <button class="volume-btn active" onclick="setVolume(75)">🔊 75%</button>
+                <button class="volume-btn" onclick="setVolume(100)">🔊 100%</button>
+            </div>
+            
+            <button class="close-btn" onclick="closePanel()">✕ إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        let currentVolume = 75;
+        let isMuted = false;
+        let volumeBeforeMute = 75;
+
+        const verticalSlider = document.getElementById('verticalSlider');
+        const volumeFill = document.getElementById('volumeFill');
+        const volumeDisplay = document.getElementById('volumeDisplay');
+        const muteBtn = document.getElementById('muteBtn');
+
+        function updateVolumeDisplay(volume) {
+            currentVolume = volume;
+            
+            // تحديث الشريط العمودي
+            volumeFill.style.height = `${Math.max(6, volume * 0.92)}%`;
+            
+            // تحديث النص
+            if (isMuted) {
+                volumeDisplay.textContent = '🔇 مكتوم';
+            } else {
+                volumeDisplay.textContent = `🔊 ${volume}%`;
+            }
+            
+            // تحديث الشريط
+            verticalSlider.value = isMuted ? 0 : volume;
+            
+            // تحديث الأزرار
+            document.querySelectorAll('.volume-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // تفعيل الزر الأقرب للقيمة الحالية
+            const buttons = [25, 50, 75, 100];
+            const closest = buttons.reduce((prev, curr) => 
+                Math.abs(curr - volume) < Math.abs(prev - volume) ? curr : prev
+            );
+            
+            if (Math.abs(closest - volume) <= 10) {
+                const activeBtn = document.querySelector(`[onclick="setVolume(${closest})"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+            }
+        }
+
+        function setVolume(volume) {
+            if (isMuted && volume > 0) {
+                isMuted = false;
+                muteBtn.textContent = '🔊 كتم الصوت';
+                muteBtn.classList.remove('muted');
+            }
+            updateVolumeDisplay(volume);
+        }
+
+        function toggleMute() {
+            if (isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊 كتم الصوت';
+                muteBtn.classList.remove('muted');
+                updateVolumeDisplay(volumeBeforeMute);
+            } else {
+                volumeBeforeMute = currentVolume;
+                isMuted = true;
+                muteBtn.textContent = '🔇 إلغاء الكتم';
+                muteBtn.classList.add('muted');
+                updateVolumeDisplay(currentVolume);
+            }
+        }
+
+        function closePanel() {
+            alert('تم إغلاق لوحة التحكم في الصوت');
+        }
+
+        // ربط الأحداث
+        verticalSlider.addEventListener('input', function() {
+            const volume = parseInt(this.value);
+            if (volume > 0 && isMuted) {
+                isMuted = false;
+                muteBtn.textContent = '🔊 كتم الصوت';
+                muteBtn.classList.remove('muted');
+            }
+            setVolume(volume);
+        });
+
+        // تهيئة العرض
+        updateVolumeDisplay(75);
+    </script>
+</body>
+</html>

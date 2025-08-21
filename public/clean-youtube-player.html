@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مشغل فيديو نظيف</title>
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .player-wrapper {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+            background: #000; /* لضمان تماسك الألوان مع الأوفرلايز */
+        }
+
+        /* أقنعة دائمة لإخفاء واجهة يوتيوب كلياً */
+        .ui-mask {
+            position: absolute;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            pointer-events: auto; /* لمنع أي تفاعل مع ما تحتها */
+        }
+        .ui-mask-top {
+            top: 0;
+            height: 90px; /* يغطي عنوان/قناة/Copy link */
+            background: linear-gradient(to bottom, rgba(0,0,0,0.9), rgba(0,0,0,0.0));
+        }
+        .ui-mask-bottom {
+            bottom: 0;
+            height: 90px; /* يغطي شريط التحكم السفلي عند الإيقاف */
+            background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.0));
+        }
+
+        #player {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* طبقة الحماية الشفافة */
+        .protection-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            z-index: 9999;
+            pointer-events: auto;
+            cursor: default;
+        }
+
+        /* أزرار التحكم */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            opacity: 1;
+            transition: opacity 0.1s ease;
+        }
+
+        .controls.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .video-info {
+            text-align: center;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+        }
+
+        .video-title {
+            color: #2c3e50;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .video-description {
+            color: #7f8c8d;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* إخفاء عناصر YouTube غير المرغوبة */
+        iframe[src*="youtube.com"] {
+            border: none !important;
+            outline: none !important;
+        }
+
+        /* منع ظهور أي عناصر تحكم من YouTube في جميع الحالات */
+        .ytp-chrome-top,
+        .ytp-chrome-bottom,
+        .ytp-chrome-controls,
+        .ytp-control-bar,
+        .ytp-progress-bar-container,
+        .ytp-title,
+        .ytp-title-text,
+        .ytp-title-link,
+        .ytp-title-channel,
+        .ytp-title-expanded-overlay,
+        .ytp-copylink-button,
+        .ytp-share-button,
+        .ytp-watermark,
+        .ytp-youtube-button,
+        .ytp-cards-button,
+        .ytp-show-cards-title,
+        .ytp-gradient-top,
+        .ytp-gradient-bottom,
+        .ytp-pause-overlay,
+        .ytp-cued-thumbnail-overlay,
+        .ytp-cued-thumbnail-overlay-image,
+        .ytp-large-play-button,
+        .ytp-play-button,
+        .ytp-big-mode,
+        .ytp-endscreen-element,
+        .ytp-ce-element,
+        .ytp-suggested-action,
+        .ytp-videowall-still,
+        .ytp-scroll-min,
+        .ytp-scroll-max,
+        .ytp-impression-link,
+        .ytp-right-controls,
+        .ytp-left-controls,
+        .ytp-time-display,
+        .ytp-volume-area,
+        .ytp-settings-button,
+        .ytp-fullscreen-button,
+        .ytp-miniplayer-button,
+        .ytp-size-button,
+        .ytp-subtitles-button,
+        .ytp-menuitem,
+        .ytp-popup,
+        .ytp-settings-menu,
+        .ytp-panel,
+        .ytp-panel-menu,
+        .ytp-progress-bar,
+        .ytp-hover-progress,
+        [class*="ytp-" i][role="button"],
+        button[class*="ytp-" i],
+        a[class*="ytp-" i] {
+            display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            position: absolute !important;
+            left: -9999px !important;
+            top: -9999px !important;
+            width: 0 !important;
+            height: 0 !important;
+            overflow: hidden !important;
+        }
+
+        /* حماية إضافية للمشغل */
+        .player-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: transparent;
+            z-index: 10000;
+            pointer-events: auto;
+        }
+
+        .player-wrapper::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: transparent;
+            z-index: 10000;
+            pointer-events: auto;
+        }
+
+        /* تأثيرات responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .player-wrapper {
+                height: 300px;
+            }
+
+            .controls {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .control-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>مشغل الفيديو النظيف</h1>
+            <p>تشغيل فيديوهات YouTube بدون أي روابط أو انتقالات</p>
+        </div>
+
+        <div class="player-wrapper">
+            <div id="player"></div>
+            <div class="ui-mask ui-mask-top"></div>
+            <div class="ui-mask ui-mask-bottom"></div>
+            <div class="protection-overlay" aria-hidden="true"></div>
+        </div>
+
+        <div class="controls" id="controls">
+            <button class="control-btn" id="playBtn">
+                <span>▶</span> تشغيل
+            </button>
+            <button class="control-btn" id="pauseBtn">
+                <span>⏸</span> إيقاف
+            </button>
+            <button class="control-btn" id="copyBtn">
+                <span>🔗</span> نسخ الرابط
+            </button>
+        </div>
+
+        <div class="video-info">
+            <div class="video-title" id="videoTitle">جاري تحميل الفيديو...</div>
+            <div class="video-description" id="videoDescription">يرجى الانتظار...</div>
+        </div>
+    </div>
+
+    <script>
+        // إعدادات الفيديو
+        const VIDEO_ID = 'dQw4w9WgXcQ'; // ضع معرف الفيديو هنا
+        let player;
+        let isPlayerReady = false;
+
+        // تحميل YouTube IFrame API
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                videoId: VIDEO_ID,
+                width: '100%',
+                height: '100%',
+                playerVars: {
+                    'autoplay': 0,           // عدم التشغيل التلقائي
+                    'controls': 0,           // إخفاء جميع أزرار التحكم
+                    'showinfo': 0,           // إخفاء معلومات الفيديو
+                    'rel': 0,                // عدم إظهار فيديوهات مقترحة
+                    'modestbranding': 1,     // إخفاء شعار YouTube
+                    'iv_load_policy': 3,     // إخفاء التعليقات التوضيحية
+                    'fs': 0,                 // إخفاء زر ملء الشاشة
+                    'cc_load_policy': 0,     // إخفاء الترجمة
+                    'disablekb': 1,          // تعطيل اختصارات لوحة المفاتيح
+                    'enablejsapi': 1,        // تفعيل JavaScript API
+                    'playsinline': 1,        // تشغيل مضمن
+                    'origin': window.location.origin
+                },
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange
+                }
+            });
+        }
+
+        // عند جاهزية المشغل
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            console.log('✅ مشغل YouTube جاهز');
+            
+            // تحديث معلومات الفيديو
+            updateVideoInfo();
+            
+            // إخفاء الأزرار بعد 0.1 ثانية
+            setTimeout(() => {
+                const controls = document.getElementById('controls');
+                controls.classList.add('hidden');
+                console.log('🔒 تم إخفاء أزرار التحكم');
+            }, 100);
+        }
+
+        // عند تغيير حالة المشغل
+        function onPlayerStateChange(event) {
+            // إخفاء العناصر عند أي تغيير في حالة المشغل
+            setTimeout(hideYouTubeElements, 50);
+
+            // إخفاء إضافي عند الإيقاف المؤقت
+            if (event.data === YT.PlayerState.PAUSED) {
+                setTimeout(hideYouTubeElements, 100);
+                setTimeout(hideYouTubeElements, 200);
+                setTimeout(hideYouTubeElements, 500);
+            }
+        }
+
+        // دالة لإخفاء عناصر YouTube
+        function hideYouTubeElements() {
+            try {
+                const iframe = document.querySelector('#player iframe');
+                if (!iframe) return;
+
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!iframeDoc) return;
+
+                // قائمة العناصر المراد إخفاؤها
+                const elementsToHide = [
+                    '.ytp-chrome-top',
+                    '.ytp-chrome-bottom',
+                    '.ytp-chrome-controls',
+                    '.ytp-control-bar',
+                    '.ytp-progress-bar-container',
+                    '.ytp-title',
+                    '.ytp-title-text',
+                    '.ytp-title-link',
+                    '.ytp-title-channel',
+                    '.ytp-title-expanded-overlay',
+                    '.ytp-copylink-button',
+                    '.ytp-share-button',
+                    '.ytp-watermark',
+                    '.ytp-youtube-button',
+                    '.ytp-cards-button',
+                    '.ytp-show-cards-title',
+                    '.ytp-gradient-top',
+                    '.ytp-gradient-bottom',
+                    '.ytp-pause-overlay',
+                    '.ytp-cued-thumbnail-overlay',
+                    '.ytp-large-play-button',
+                    '.ytp-play-button',
+                    '.ytp-endscreen-element',
+                    '.ytp-ce-element',
+                    '.ytp-suggested-action',
+                    '.ytp-right-controls',
+                    '.ytp-left-controls',
+                    '.ytp-time-display',
+                    '.ytp-volume-area',
+                    '.ytp-settings-button',
+                    '.ytp-fullscreen-button',
+                    '.ytp-miniplayer-button',
+                    '.ytp-size-button',
+                    '.ytp-subtitles-button'
+                ];
+
+                // إخفاء العناصر
+                elementsToHide.forEach(selector => {
+                    const elements = iframeDoc.querySelectorAll(selector);
+                    elements.forEach(element => {
+                        element.style.display = 'none';
+                        element.style.visibility = 'hidden';
+                        element.style.opacity = '0';
+                        element.style.pointerEvents = 'none';
+                        element.style.position = 'absolute';
+                        element.style.left = '-9999px';
+                        element.style.top = '-9999px';
+                        element.style.width = '0';
+                        element.style.height = '0';
+                        element.remove(); // إزالة العنصر نهائياً
+                    });
+                });
+
+                // إضافة CSS مخصص لإخفاء العناصر
+                let customStyle = iframeDoc.getElementById('custom-hide-style');
+                if (!customStyle) {
+                    customStyle = iframeDoc.createElement('style');
+                    customStyle.id = 'custom-hide-style';
+                    customStyle.textContent = `
+                        .ytp-chrome-top,
+                        .ytp-chrome-bottom,
+                        .ytp-chrome-controls,
+                        .ytp-control-bar,
+                        .ytp-progress-bar-container,
+                        .ytp-title,
+                        .ytp-title-text,
+                        .ytp-title-link,
+                        .ytp-title-channel,
+                        .ytp-copylink-button,
+                        .ytp-share-button,
+                        .ytp-watermark,
+                        .ytp-youtube-button,
+                        .ytp-pause-overlay,
+                        .ytp-cued-thumbnail-overlay,
+                        .ytp-large-play-button,
+                        .ytp-play-button,
+                        .ytp-endscreen-element,
+                        .ytp-ce-element,
+                        .ytp-suggested-action,
+                        .ytp-right-controls,
+                        .ytp-left-controls {
+                            display: none !important;
+                            visibility: hidden !important;
+                            opacity: 0 !important;
+                            pointer-events: none !important;
+                            position: absolute !important;
+                            left: -9999px !important;
+                            top: -9999px !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                        }
+                    `;
+                    iframeDoc.head.appendChild(customStyle);
+                }
+
+            } catch (error) {
+                // تجاهل أخطاء CORS
+                console.log('🔒 لا يمكن الوصول لمحتوى iframe بسبب CORS');
+            }
+        }
+
+        // تحديث معلومات الفيديو
+        function updateVideoInfo() {
+            // يمكنك تخصيص هذه المعلومات
+            document.getElementById('videoTitle').textContent = 'عنوان الفيديو المخصص';
+            document.getElementById('videoDescription').textContent = 'وصف مخصص للفيديو يظهر هنا بدلاً من معلومات YouTube الأصلية.';
+        }
+
+        // وظائف أزرار التحكم (تعمل لمدة 0.1 ثانية فقط)
+        document.getElementById('playBtn').addEventListener('click', () => {
+            if (isPlayerReady) {
+                player.playVideo();
+            }
+        });
+
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            if (isPlayerReady) {
+                player.pauseVideo();
+            }
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', () => {
+            const videoUrl = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
+            navigator.clipboard.writeText(videoUrl).then(() => {
+                console.log('تم نسخ الرابط');
+            }).catch(() => {
+                console.log('فشل في نسخ الرابط');
+            });
+        });
+
+        // حماية شاملة من الروابط والانتقالات
+        function setupProtection() {
+            const protectionOverlay = document.querySelector('.protection-overlay');
+
+            // منع جميع أحداث الماوس على طبقة الحماية
+            ['click', 'mousedown', 'mouseup', 'dblclick'].forEach(eventType => {
+                protectionOverlay.addEventListener(eventType, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                });
+            });
+
+            // منع جميع الروابط في الصفحة
+            document.addEventListener('click', (e) => {
+                if (e.target.closest('a[href*="youtube.com"]') ||
+                    e.target.closest('a[href*="youtu.be"]') ||
+                    e.target.closest('[onclick*="youtube"]') ||
+                    e.target.closest('[href]')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+            });
+
+            // منع النقر بالزر الأيمن
+            document.querySelector('.player-wrapper').addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+            });
+
+            // منع السحب والإفلات
+            document.querySelector('.player-wrapper').addEventListener('dragstart', (e) => {
+                e.preventDefault();
+            });
+
+            // منع تحديد النص في منطقة المشغل
+            document.querySelector('.player-wrapper').addEventListener('selectstart', (e) => {
+                e.preventDefault();
+            });
+
+            // مراقبة مستمرة لإزالة أي روابط جديدة وإخفاء العناصر
+            setInterval(() => {
+                const iframe = document.querySelector('#player iframe');
+                if (iframe) {
+                    try {
+                        // محاولة الوصول لمحتوى iframe (قد تفشل بسبب CORS)
+                        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                        if (iframeDoc) {
+                            // إزالة الروابط
+                            const links = iframeDoc.querySelectorAll('a, [onclick], [href]');
+                            links.forEach(link => {
+                                link.style.pointerEvents = 'none';
+                                link.onclick = null;
+                                link.removeAttribute('href');
+                                link.style.display = 'none';
+                            });
+
+                            // إخفاء عناصر التحكم
+                            const controlElements = iframeDoc.querySelectorAll('.ytp-chrome-top, .ytp-chrome-bottom, .ytp-pause-overlay, .ytp-cued-thumbnail-overlay, .ytp-large-play-button');
+                            controlElements.forEach(element => {
+                                element.style.display = 'none';
+                                element.style.visibility = 'hidden';
+                                element.style.opacity = '0';
+                                element.style.pointerEvents = 'none';
+                                element.remove();
+                            });
+                        }
+                    } catch (error) {
+                        // تجاهل أخطاء CORS
+                    }
+                }
+
+                // إخفاء إضافي للعناصر
+                hideYouTubeElements();
+            }, 200);
+        }
+
+        // تشغيل الحماية عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', setupProtection);
+
+        // إضافة حماية إضافية عند جاهزية المشغل
+        function onPlayerReady(event) {
+            isPlayerReady = true;
+            console.log('✅ مشغل YouTube جاهز');
+
+            // تحديث معلومات الفيديو
+            updateVideoInfo();
+
+            // تفعيل الحماية الإضافية
+            setupProtection();
+
+            // بدء إخفاء عناصر YouTube
+            hideYouTubeElements();
+
+            // مراقبة مستمرة لإخفاء العناصر
+            setInterval(hideYouTubeElements, 100);
+
+            // مراقبة سريعة عند الإيقاف
+            setInterval(() => {
+                if (player && player.getPlayerState && player.getPlayerState() === YT.PlayerState.PAUSED) {
+                    hideYouTubeElements();
+                }
+            }, 50);
+
+            // إخفاء الأزرار بعد 0.1 ثانية
+            setTimeout(() => {
+                const controls = document.getElementById('controls');
+                controls.classList.add('hidden');
+                console.log('🔒 تم إخفاء أزرار التحكم');
+            }, 100);
+        }
+    </script>
+</body>
+</html>

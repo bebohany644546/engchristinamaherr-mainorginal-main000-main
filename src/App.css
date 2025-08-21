@@ -1,0 +1,929 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --physics-navy: #1e293b;
+  --physics-dark: #0f172a;
+  --physics-gold: #f59e0b;
+  --physics-lightgold: #fbbf24;
+}
+
+/* Base styles and utility classes */
+body {
+  direction: rtl;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background-color: var(--physics-navy);
+  color: white;
+}
+
+.bg-physics-navy {
+  background-color: var(--physics-navy);
+}
+
+.bg-physics-dark {
+  background-color: var(--physics-dark);
+}
+
+.bg-physics-gold {
+  background-color: var(--physics-gold);
+}
+
+.bg-physics-lightgold {
+  background-color: var(--physics-lightgold);
+}
+
+.text-physics-gold {
+  color: var(--physics-gold);
+}
+
+.text-physics-navy {
+  color: var(--physics-navy);
+}
+
+/* Button styles */
+.goldBtn {
+  background-color: var(--physics-gold);
+  color: var(--physics-navy);
+  font-weight: 600;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.goldBtn:hover {
+  opacity: 0.9;
+}
+
+/* Input fields */
+.inputField {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  background-color: #334155;
+  border: 1px solid #475569;
+  color: white;
+  outline: none;
+}
+
+.inputField:focus {
+  border-color: var(--physics-gold);
+}
+
+/* Physics animations */
+.physics-particle {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.physics-electron {
+  background: #4fc3f7;
+  box-shadow: 0 0 10px #4fc3f7, 0 0 20px #4fc3f7;
+  animation: orbit 10s linear infinite;
+}
+
+.physics-atom {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.physics-formula {
+  position: absolute;
+  color: rgba(255, 255, 255, 0.3);
+  font-family: 'Times New Roman', serif;
+  font-size: 24px;
+  pointer-events: none;
+  user-select: none;
+  z-index: 1;
+}
+
+.phone-button {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  background-color: var(--physics-gold);
+  color: var(--physics-dark);
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.phone-button:hover {
+  transform: scale(1.1);
+}
+
+.phone-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.phone-modal-content {
+  background-color: var(--physics-dark);
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  padding: 20px;
+  border: 1px solid var(--physics-gold);
+}
+
+/* Video player styles - محسن للموبايل */
+.video-container {
+  position: relative;
+  width: 100%;
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background-color: black;
+}
+
+.video-list-item {
+  transition: all 0.2s ease;
+}
+
+.video-list-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* تحسينات للأجهزة المحمولة */
+.mobile-player {
+  border-radius: 0.5rem;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-player button {
+  min-width: 44px;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* تحسينات التحكم للموبايل - إخفاء بعد ثانيتين */
+.mobile-player .controls-overlay {
+  transition: opacity 0.3s ease;
+}
+
+.mobile-player .controls-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.mobile-player .controls-overlay:not(.show) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mobile-player .seek-bar {
+  height: 12px;
+  border-radius: 6px;
+}
+
+.mobile-player .seek-bar-thumb {
+  width: 20px;
+  height: 20px;
+  margin-left: -10px;
+}
+
+/* تحسينات للتابلت */
+.tablet-player {
+  border-radius: 0.5rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.tablet-player button {
+  min-width: 42px;
+  min-height: 42px;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.tablet-player .seek-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.tablet-player .seek-bar-thumb {
+  width: 16px;
+  height: 16px;
+  margin-left: -8px;
+}
+
+/* تحسينات للديسكتوب */
+.desktop-player {
+  border-radius: 0.5rem;
+}
+
+.desktop-player button {
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.desktop-player .seek-bar {
+  height: 4px;
+  border-radius: 2px;
+}
+
+.desktop-player .seek-bar-thumb {
+  width: 12px;
+  height: 12px;
+  margin-left: -6px;
+}
+
+/* تحسينات خاصة بـ iOS */
+@supports (-webkit-touch-callout: none) {
+  .youtube-player-container {
+    -webkit-playsinline: true;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .youtube-player-container video {
+    -webkit-playsinline: true;
+  }
+
+  /* إصلاح أزرار iOS */
+  .youtube-player-container button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+  }
+
+  /* إصلاح شريط التقدم iOS */
+  .youtube-player-container .seek-bar {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* منع التمرير العمودي عند التفاعل مع شريط التقدم */
+  .youtube-player-container .seek-bar * {
+    touch-action: pan-x;
+  }
+}
+
+/* تحسينات خاصة بـ Android */
+@media screen and (max-width: 768px) and (orientation: portrait) {
+  .mobile-player {
+    max-height: 50vh;
+  }
+}
+
+@media screen and (max-width: 768px) and (orientation: landscape) {
+  .mobile-player {
+    max-height: 90vh;
+  }
+}
+
+/* تحسينات خاصة بـ Safari */
+@supports (-webkit-appearance: none) {
+  .youtube-player-container button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* تحسينات خاصة بـ Firefox */
+@-moz-document url-prefix() {
+  .youtube-player-container {
+    -moz-user-select: none;
+  }
+}
+
+/* تحسينات للأجهزة عالية الدقة */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .youtube-player-container button {
+    border: none;
+    outline: none;
+  }
+
+  .youtube-player-container .seek-bar-thumb {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* تحسينات للوضع المظلم */
+@media (prefers-color-scheme: dark) {
+  .youtube-player-container {
+    background-color: #000;
+  }
+}
+
+/* تحسينات لتقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+  .youtube-player-container * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* تحسينات للتباين العالي */
+@media (prefers-contrast: high) {
+  .youtube-player-container button {
+    border: 2px solid currentColor;
+  }
+
+  .youtube-player-container .seek-bar {
+    border: 1px solid currentColor;
+  }
+}
+
+/* تحسينات خاصة بـ iOS لملء الشاشة */
+@supports (-webkit-touch-callout: none) {
+  /* إصلاح أزرار iOS */
+  .youtube-player-container button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    background-clip: padding-box;
+  }
+
+  /* إصلاح شريط التقدم iOS */
+  .youtube-player-container .seek-bar {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* منع التمرير العمودي عند التفاعل مع شريط التقدم */
+  .youtube-player-container .seek-bar * {
+    touch-action: pan-x;
+  }
+
+  /* دعم ملء الشاشة في iOS */
+  .youtube-player-container:-webkit-full-screen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    background: black !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    z-index: 999999 !important;
+  }
+
+  .youtube-player-container.fullscreen,
+  .youtube-player-container.ios-fullscreen,
+  .youtube-player-container.universal-fullscreen {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    z-index: 999999 !important;
+    background: black !important;
+    border-radius: 0 !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+  }
+
+  /* تأكد من أن iframe اليوتيوب يملأ الحاوية */
+  .youtube-player-container.ios-fullscreen iframe,
+  .youtube-player-container.fullscreen iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* إخفاء شريط العنوان في Safari */
+  .youtube-player-container.ios-fullscreen {
+    /* محاولة تغطية شريط الحالة */
+    top: env(safe-area-inset-top, 0) !important;
+    padding-top: env(safe-area-inset-top, 0) !important;
+    height: calc(100vh - env(safe-area-inset-top, 0)) !important;
+  }
+}
+
+/* إخفاء شريط التمرير في ملء الشاشة - دعم جميع الأنظمة */
+body.fullscreen-active,
+body.ios-fullscreen-active,
+body.universal-fullscreen-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.ios-fullscreen-active,
+html.universal-fullscreen-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+html.ios-fullscreen-active {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* تحسينات خاصة للأجهزة المحمولة */
+@media screen and (max-device-width: 768px) {
+  .youtube-player-container.ios-fullscreen {
+    /* ملء الشاشة بالكامل - العرض والطول */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    min-width: 100vw !important;
+    max-width: none !important;
+    max-height: none !important;
+
+    /* إزالة أي حدود أو مسافات */
+    border: none !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    transform: none !important;
+
+    /* تأكد من الخلفية السوداء */
+    background: black !important;
+    z-index: 999999 !important;
+  }
+
+  /* تأكد من أن iframe يملأ الحاوية بالكامل */
+  .youtube-player-container.ios-fullscreen iframe {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+    border: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    object-fit: cover !important;
+  }
+
+  /* تأكد من أن جميع العناصر الفرعية تملأ الحاوية */
+  .youtube-player-container.ios-fullscreen > * {
+    width: 100% !important;
+    height: 100% !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+
+  /* إخفاء شريط العنوان عند التمرير */
+  body.ios-fullscreen-active {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    overflow-scrolling: touch;
+  }
+
+  html.ios-fullscreen-active {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    overflow: hidden !important;
+  }
+}
+
+/* تحسينات إضافية لـ Safari على iOS */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  .youtube-player-container button {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* دعم الدوران التلقائي للوضع الأفقي */
+.youtube-player-container.ios-fullscreen.rotated {
+  transform: rotate(90deg) !important;
+  transform-origin: center center !important;
+  width: 100vh !important;
+  height: 100vw !important;
+  left: 50% !important;
+  top: 50% !important;
+  margin-left: -50vh !important;
+  margin-top: -50vw !important;
+}
+
+/* تحسينات للدوران السلس */
+.youtube-player-container.ios-fullscreen {
+  transition: transform 0.3s ease-in-out !important;
+}
+
+/* إخفاء شريط العنوان أثناء الدوران */
+@media screen and (orientation: portrait) {
+  .youtube-player-container.ios-fullscreen {
+    /* في الوضع العمودي، طبق الدوران */
+    transform: rotate(90deg);
+    transform-origin: center center;
+    width: 100vh;
+    height: 100vw;
+    left: 50%;
+    top: 50%;
+    margin-left: -50vh;
+    margin-top: -50vw;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .youtube-player-container.ios-fullscreen,
+  .youtube-player-container.universal-fullscreen {
+    /* في الوضع الأفقي، لا تطبق الدوران */
+    transform: none;
+    width: 100vw;
+    height: 100vh;
+    left: 0;
+    top: 0;
+    margin: 0;
+  }
+}
+
+/* تحسينات خاصة بـ Android */
+@media screen and (max-device-width: 768px) {
+  /* Android Chrome */
+  .youtube-player-container.universal-fullscreen {
+    /* إخفاء شريط العنوان والتنقل */
+    height: 100vh !important;
+    min-height: 100vh !important;
+
+    /* تأكد من ملء الشاشة بالكامل */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+  }
+
+  /* Android WebView */
+  .youtube-player-container.universal-fullscreen iframe {
+    /* تأكد من أن الفيديو يملأ الشاشة */
+    width: 100vw !important;
+    height: 100vh !important;
+    min-width: 100vw !important;
+    min-height: 100vh !important;
+  }
+}
+
+/* تحسينات للمتصفحات المختلفة */
+/* Chrome/Chromium */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  .youtube-player-container.universal-fullscreen {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+}
+
+/* Firefox */
+@-moz-document url-prefix() {
+  .youtube-player-container.universal-fullscreen {
+    -moz-user-select: none;
+  }
+}
+
+/* Edge */
+@supports (-ms-ime-align: auto) {
+  .youtube-player-container.universal-fullscreen {
+    -ms-user-select: none;
+  }
+}
+
+/* تحسين اللمس للأزرار */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* أنماط شريط التحكم في الصوت */
+.volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.volume-slider::-webkit-slider-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #f59e0b;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider::-webkit-slider-thumb:hover {
+  background: #fbbf24;
+  transform: scale(1.1);
+}
+
+.volume-slider::-moz-range-track {
+  width: 100%;
+  height: 4px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  border: none;
+}
+
+.volume-slider::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 50%;
+  background: #f59e0b;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.volume-slider::-moz-range-thumb:hover {
+  background: #fbbf24;
+  transform: scale(1.1);
+}
+
+/* أنماط الشريط العمودي للموبايل */
+.vertical-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  width: 40px !important;
+  height: 160px !important;
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+  transform: rotate(-90deg);
+  transform-origin: center;
+}
+
+.vertical-slider::-webkit-slider-track {
+  width: 128px;
+  height: 6px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 3px;
+}
+
+.vertical-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  cursor: pointer;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  position: relative;
+  transform: rotate(90deg);
+}
+
+.vertical-slider::-webkit-slider-thumb:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: rotate(90deg) scale(1.2);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.7);
+}
+
+.vertical-slider::-webkit-slider-thumb:active {
+  transform: rotate(90deg) scale(1.3);
+  box-shadow: 0 8px 20px rgba(245, 158, 11, 0.9);
+}
+
+.vertical-slider::-moz-range-track {
+  width: 8px;
+  height: 160px;
+  cursor: pointer;
+  background: transparent;
+  border-radius: 4px;
+  border: none;
+}
+
+.vertical-slider::-moz-range-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  cursor: pointer;
+  border: 4px solid white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+.vertical-slider::-moz-range-thumb:hover {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(245, 158, 11, 0.7);
+}
+
+/* تحسينات إضافية للموبايل */
+@media (max-width: 768px) {
+  .vertical-slider {
+    width: 44px !important;
+    height: 180px !important;
+  }
+
+  .vertical-slider::-webkit-slider-thumb {
+    height: 28px;
+    width: 28px;
+    border: 5px solid white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+  }
+
+  .vertical-slider::-webkit-slider-thumb:hover {
+    transform: rotate(90deg) scale(1.3);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.8);
+  }
+
+  .vertical-slider::-moz-range-thumb {
+    height: 28px;
+    width: 28px;
+    border: 5px solid white;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.7);
+  }
+
+  .vertical-slider::-moz-range-thumb:hover {
+    transform: scale(1.3);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.8);
+  }
+
+  /* تحسين أزرار التحكم في الصوت */
+  .volume-control-mobile {
+    padding: 1rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(245, 158, 11, 0.5);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* تحسين النماذج للموبايل */
+@media (max-width: 768px) {
+  .inputField {
+    font-size: 16px; /* منع التكبير التلقائي في iOS */
+    padding: 0.75rem 1rem;
+  }
+
+  select.inputField {
+    font-size: 16px;
+    padding: 0.75rem 1rem;
+  }
+
+  .goldBtn {
+    font-size: 16px;
+    padding: 0.75rem 1rem;
+    min-height: 44px;
+  }
+
+  /* تحسينات شريط الصوت للموبايل */
+  .volume-slider {
+    height: 8px !important;
+    width: 128px !important;
+  }
+
+  .volume-slider::-webkit-slider-thumb {
+    height: 20px !important;
+    width: 20px !important;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  }
+
+  .volume-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.7);
+  }
+
+  .volume-slider::-moz-range-thumb {
+    height: 20px !important;
+    width: 20px !important;
+    border: 3px solid white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  }
+
+  .volume-slider::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 16px rgba(245, 158, 11, 0.7);
+  }
+}
+
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateX(50px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(50px) rotate(-360deg); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.7; }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--physics-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تشخيص مشكلة إضافة الفيديو</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a2e;
+            color: white;
+            padding: 20px;
+            direction: rtl;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .debug-section {
+            background: #16213e;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border: 1px solid #ffd700;
+        }
+        .error {
+            color: #f44336;
+            background: #2d1b1b;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .success {
+            color: #4CAF50;
+            background: #1b2d1b;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .info {
+            color: #2196F3;
+            background: #1b1b2d;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .warning {
+            color: #ff9800;
+            background: #2d2d1b;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        button {
+            background: #ffd700;
+            color: #1a1a2e;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #ffed4e;
+        }
+        .log-area {
+            background: #000;
+            color: #0f0;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            direction: ltr;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            border-left: 3px solid #ffd700;
+            background: #2a2a3e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 تشخيص مشكلة إضافة الفيديو</h1>
+        
+        <div class="debug-section">
+            <h2>📋 خطوات التشخيص</h2>
+            <div class="step">
+                <strong>الخطوة 1:</strong> افتح أدوات المطور في المتصفح (اضغط F12)
+            </div>
+            <div class="step">
+                <strong>الخطوة 2:</strong> اذهب إلى تبويب "Console"
+            </div>
+            <div class="step">
+                <strong>الخطوة 3:</strong> جرب إضافة فيديو جديد
+            </div>
+            <div class="step">
+                <strong>الخطوة 4:</strong> انسخ رسالة الخطأ من Console وأرسلها
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🔍 الأخطاء الشائعة وحلولها</h2>
+            
+            <div class="error">
+                <strong>❌ "no such column: video_password"</strong>
+                <p><strong>السبب:</strong> عمود كلمة المرور غير موجود في قاعدة البيانات</p>
+                <p><strong>الحل:</strong> النظام سيحاول إضافة العمود تلقائياً، أو إعادة إنشاء الجدول</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ "no such table: videos"</strong>
+                <p><strong>السبب:</strong> جدول الفيديوهات غير موجود</p>
+                <p><strong>الحل:</strong> النظام سيحاول إنشاء الجدول تلقائياً</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ "database is locked"</strong>
+                <p><strong>السبب:</strong> قاعدة البيانات مشغولة</p>
+                <p><strong>الحل:</strong> انتظر قليلاً وحاول مرة أخرى</p>
+            </div>
+
+            <div class="error">
+                <strong>❌ "UNIQUE constraint failed"</strong>
+                <p><strong>السبب:</strong> الفيديو موجود بالفعل</p>
+                <p><strong>الحل:</strong> غير عنوان الفيديو أو الرابط</p>
+            </div>
+        </div>
+
+        <div class="debug-section">
+            <h2>🛠️ أدوات التشخيص</h2>
+            <button onclick="checkConsoleErrors()">فحص أخطاء Console</button>
+            <button onclick="checkNetworkErrors()">فحص أخطاء الشبكة</button>
+            <button onclick="simulateVideoAdd()">محاكاة إضافة فيديو</button>
+            <button onclick="clearLogs()">مسح السجلات</button>
+            
+            <h3>📝 سجل التشخيص:</h3>
+            <div id="debug-log" class="log-area"></div>
+        </div>
+
+        <div class="debug-section">
+            <h2>💡 نصائح لحل المشكلة</h2>
+            
+            <div class="info">
+                <strong>✅ إذا ظهر خطأ "no such column":</strong>
+                <p>1. أعد تحميل الصفحة</p>
+                <p>2. جرب إضافة الفيديو مرة أخرى</p>
+                <p>3. النظام سيصلح قاعدة البيانات تلقائياً</p>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ إذا استمرت المشكلة:</strong>
+                <p>1. تأكد من اتصال الإنترنت</p>
+                <p>2. تأكد من صحة رابط يوتيوب</p>
+                <p>3. جرب مع متصفح آخر</p>
+            </div>
+
+            <div class="success">
+                <strong>🎯 للحصول على مساعدة مفصلة:</strong>
+                <p>1. افتح Console (F12)</p>
+                <p>2. انسخ رسالة الخطأ كاملة</p>
+                <p>3. أرسل الرسالة مع تفاصيل الفيديو المراد إضافته</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let debugLog = document.getElementById('debug-log');
+        
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                info: '#0ff',
+                error: '#f44',
+                success: '#4f4',
+                warning: '#fa0'
+            };
+            
+            debugLog.innerHTML += `<span style="color: ${colors[type]}">[${timestamp}] ${message}</span>\n`;
+            debugLog.scrollTop = debugLog.scrollHeight;
+        }
+        
+        function checkConsoleErrors() {
+            log('🔍 فحص أخطاء Console...', 'info');
+            
+            // Override console.error to catch errors
+            const originalError = console.error;
+            console.error = function(...args) {
+                log('❌ خطأ في Console: ' + args.join(' '), 'error');
+                originalError.apply(console, args);
+            };
+            
+            log('✅ تم تفعيل مراقبة الأخطاء', 'success');
+        }
+        
+        function checkNetworkErrors() {
+            log('🌐 فحص أخطاء الشبكة...', 'info');
+            
+            // Check if we can reach the database
+            fetch('https://engchristinamaher-bebohany.aws-ap-northeast-1.turso.io')
+                .then(response => {
+                    log('✅ الاتصال بقاعدة البيانات يعمل', 'success');
+                })
+                .catch(error => {
+                    log('❌ خطأ في الاتصال بقاعدة البيانات: ' + error.message, 'error');
+                });
+        }
+        
+        function simulateVideoAdd() {
+            log('🧪 محاكاة إضافة فيديو...', 'info');
+            
+            const testVideo = {
+                title: 'فيديو تجريبي - ' + Date.now(),
+                url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+                grade: 'first',
+                isYouTube: true,
+                password: 'test123'
+            };
+            
+            log('📋 بيانات الفيديو التجريبي: ' + JSON.stringify(testVideo, null, 2), 'info');
+            
+            // Simulate the steps that happen in the real function
+            log('🔍 فحص حالة قاعدة البيانات...', 'info');
+            log('🔧 التحقق من عمود كلمة المرور...', 'info');
+            log('💾 إدراج الفيديو في قاعدة البيانات...', 'info');
+            
+            // Simulate success
+            setTimeout(() => {
+                log('✅ تم إدراج الفيديو التجريبي بنجاح (محاكاة)', 'success');
+            }, 2000);
+        }
+        
+        function clearLogs() {
+            debugLog.innerHTML = '';
+            log('🧹 تم مسح السجلات', 'info');
+        }
+        
+        // Initialize
+        log('🚀 تم تشغيل أدوات التشخيص', 'success');
+        log('💡 استخدم الأزرار أعلاه لتشخيص المشكلة', 'info');
+    </script>
+</body>
+</html>

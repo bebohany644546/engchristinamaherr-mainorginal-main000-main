@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>اختبار دعم روابط اليوتيوب</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 23, 42, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #f59e0b;
+        }
+        h1 {
+            color: #f59e0b;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .test-input {
+            width: 100%;
+            padding: 12px;
+            background: #1e293b;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        .test-output {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #22c55e;
+            color: #22c55e;
+            font-family: monospace;
+            word-break: break-all;
+            margin-bottom: 10px;
+        }
+        .test-examples {
+            display: grid;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .example {
+            background: rgba(15, 23, 42, 0.7);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #f59e0b;
+        }
+        .example-title {
+            color: #f59e0b;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        .example-input {
+            color: #94a3b8;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .example-output {
+            color: #22c55e;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .status.success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid #22c55e;
+        }
+        .status.error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 اختبار دعم روابط اليوتيوب المحسن</h1>
+        
+        <div class="test-section">
+            <h3>اختبار مباشر:</h3>
+            <input type="text" class="test-input" id="testInput" placeholder="أدخل رابط يوتيوب هنا...">
+            <div class="test-output" id="testOutput">النتيجة ستظهر هنا...</div>
+            <div class="status" id="testStatus" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>أمثلة مدعومة:</h3>
+            <div class="test-examples" id="examples"></div>
+        </div>
+    </div>
+
+    <script>
+        // وظيفة تحسين روابط اليوتيوب (نسخة من الكود الأصلي)
+        function improveYouTubeUrl(inputUrl) {
+            let improved = inputUrl.trim();
+            
+            // إضافة https:// إذا كان مفقود
+            if (!improved.startsWith('http://') && !improved.startsWith('https://')) {
+                improved = 'https://' + improved;
+            }
+            
+            // تصحيح www.youtube إلى youtube
+            improved = improved.replace(/www\.youtube/g, 'youtube');
+            
+            // تصحيح youtube إلى youtube.com
+            if (improved.includes('youtube') && !improved.includes('youtube.com')) {
+                improved = improved.replace(/youtube(?!\.com)/g, 'youtube.com');
+            }
+            
+            // إزالة المعاملات غير الضرورية والاحتفاظ بـ v فقط
+            if (improved.includes('youtube.com/watch')) {
+                try {
+                    const urlObj = new URL(improved);
+                    const videoId = urlObj.searchParams.get('v');
+                    if (videoId) {
+                        improved = `https://youtube.com/watch?v=${videoId}`;
+                    }
+                } catch (e) {
+                    // إذا فشل parsing، نحاول استخراج معرف الفيديو يدوياً
+                    const match = improved.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+                    if (match) {
+                        improved = `https://youtube.com/watch?v=${match[1]}`;
+                    }
+                }
+            }
+            
+            // تصحيح روابط youtu.be
+            if (improved.includes('youtu.be/') && !improved.includes('youtube.com')) {
+                const match = improved.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+                if (match) {
+                    improved = `https://youtube.com/watch?v=${match[1]}`;
+                }
+            }
+            
+            return improved;
+        }
+
+        // وظيفة استخراج معرف الفيديو للتحقق من صحة الرابط
+        function extractVideoId(url) {
+            const cleanUrl = url.trim();
+            
+            const patterns = [
+                /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/watch\?.*&v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+                /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})\?/,
+                /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})\?/,
+                /(?:youtube\.com\/v\/)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+                /(?:m\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/,
+                /(?:m\.youtube\.com\/watch\?.*v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/watch\?.*[&?]v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})&t=/,
+                /(?:youtu\.be\/)([a-zA-Z0-9_-]{11})\?t=/,
+                /(?:youtube\.com\/watch\?.*list=.*&v=)([a-zA-Z0-9_-]{11})/,
+                /(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})&list=/,
+                /^([a-zA-Z0-9_-]{11})$/
+            ];
+
+            for (const pattern of patterns) {
+                const match = cleanUrl.match(pattern);
+                if (match && match[1] && match[1].length === 11) {
+                    return match[1];
+                }
+            }
+            
+            return null;
+        }
+
+        // أمثلة للاختبار
+        const testExamples = [
+            {
+                title: "رابط عادي",
+                input: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط مختصر",
+                input: "https://youtu.be/dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط Shorts",
+                input: "https://youtube.com/shorts/dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط تضمين",
+                input: "https://youtube.com/embed/dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "معرف الفيديو فقط",
+                input: "dQw4w9WgXcQ",
+                expected: "https://dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط مع معاملات إضافية",
+                input: "https://youtube.com/watch?v=dQw4w9WgXcQ&t=30s&list=PLxyz",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط بدون https",
+                input: "youtube.com/watch?v=dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            },
+            {
+                title: "رابط موبايل",
+                input: "https://m.youtube.com/watch?v=dQw4w9WgXcQ",
+                expected: "https://youtube.com/watch?v=dQw4w9WgXcQ"
+            }
+        ];
+
+        // عرض الأمثلة
+        function displayExamples() {
+            const examplesContainer = document.getElementById('examples');
+            testExamples.forEach(example => {
+                const result = improveYouTubeUrl(example.input);
+                const videoId = extractVideoId(result);
+                const isValid = videoId !== null;
+                
+                const exampleDiv = document.createElement('div');
+                exampleDiv.className = 'example';
+                exampleDiv.innerHTML = `
+                    <div class="example-title">${example.title}</div>
+                    <div class="example-input">الإدخال: ${example.input}</div>
+                    <div class="example-output">النتيجة: ${result}</div>
+                    <div class="status ${isValid ? 'success' : 'error'}">
+                        ${isValid ? '✅ صالح - معرف الفيديو: ' + videoId : '❌ غير صالح'}
+                    </div>
+                `;
+                examplesContainer.appendChild(exampleDiv);
+            });
+        }
+
+        // اختبار مباشر
+        document.getElementById('testInput').addEventListener('input', function(e) {
+            const input = e.target.value;
+            const output = document.getElementById('testOutput');
+            const status = document.getElementById('testStatus');
+            
+            if (!input.trim()) {
+                output.textContent = 'النتيجة ستظهر هنا...';
+                status.style.display = 'none';
+                return;
+            }
+            
+            const result = improveYouTubeUrl(input);
+            const videoId = extractVideoId(result);
+            const isValid = videoId !== null;
+            
+            output.textContent = result;
+            status.style.display = 'block';
+            status.className = `status ${isValid ? 'success' : 'error'}`;
+            status.textContent = isValid ? 
+                `✅ صالح - معرف الفيديو: ${videoId}` : 
+                '❌ رابط غير صالح';
+        });
+
+        // تشغيل الاختبارات عند تحميل الصفحة
+        displayExamples();
+    </script>
+</body>
+</html>
