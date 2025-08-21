@@ -41,35 +41,60 @@ export function Html5QrScanner({ onScanSuccess, onClose }: Html5QrScannerProps) 
   }, []);
 
   const startScanner = async () => {
-    if (!scannerRef.current) return;
+    if (!scannerRef.current) {
+      console.error("Scanner ref is not available");
+      return;
+    }
 
     try {
+      console.log("🎥 بدء تشغيل الكاميرا...");
       setIsScanning(true);
-      
+
+      // التحقق من وجود كاميرات متاحة
+      const cameras = await Html5Qrcode.getCameras();
+      console.log("📷 الكاميرات المتاحة:", cameras.length);
+
+      if (cameras.length === 0) {
+        throw new Error("لا توجد كاميرات متاحة");
+      }
+
       const config = {
         fps: 10,
         qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
+        aspectRatio: 1.0,
+        disableFlip: false
       };
-      
-      await scannerRef.current.start(
-        { facingMode: "environment" }, // تفضيل الكاميرا الخلفية
-        config,
-        handleQrCodeSuccess,
-        handleQrCodeError
-      );
-      
-      toast({
-        title: "✅ تم تشغيل الكاميرا",
-        description: "وجه الكاميرا إلى رمز QR أو Barcode"
-      });
-      
-    } catch (err) {
-      console.error("خطأ في بدء الماسح الضوئي:", err);
+
+      // محاولة استخدام الكاميرا الخلفية أولاً، ثم أي كاميرا متاحة
+      let cameraId;
+      try {
+        cameraId = { facingMode: "environment" };
+        await scannerRef.current.start(cameraId, config, handleQrCodeSuccess, handleQrCodeError);
+        console.log("✅ تم تشغيل الكاميرا الخلفية");
+      } catch (backCameraError) {
+        console.log("⚠️ فشل تشغيل الكاميرا الخلفية، جاري المحاولة مع الكاميرا الأمامية");
+        cameraId = cameras[0].id;
+        await scannerRef.current.start(cameraId, config, handleQrCodeSuccess, handleQrCodeError);
+        console.log("✅ تم تشغيل الكاميرا الأمامية");
+      }
+
+    } catch (err: any) {
+      console.error("❌ خطأ في بدء الماسح الضوئي:", err);
+
+      let errorMessage = "تأكد من أن لديك كاميرا متاحة وأنك منحتها الأذونات المناسبة";
+
+      if (err.message?.includes("Permission")) {
+        errorMessage = "يرجى السماح للموقع بالوصول إلى الكاميرا";
+      } else if (err.message?.includes("NotFound")) {
+        errorMessage = "لم يتم العثور على كاميرا متاحة";
+      } else if (err.message?.includes("NotAllowed")) {
+        errorMessage = "تم رفض الوصول إلى الكاميرا";
+      }
+
       toast({
         variant: "destructive",
         title: "تعذر تشغيل الكاميرا",
-        description: "تأكد من أن لديك كاميرا متاحة وأنك منحتها الأذونات المناسبة"
+        description: errorMessage
       });
       setIsScanning(false);
       onClose();
@@ -95,10 +120,7 @@ export function Html5QrScanner({ onScanSuccess, onClose }: Html5QrScannerProps) 
     await stopScanner();
     
     // نُرجع الكود المقروء دون تسجيل الحضور تلقائيًا
-    toast({
-      title: "✅ تم قراءة الكود",
-      description: "تم ملء الحقل بكود الطالب"
-    });
+    // إزالة الإشعار المكرر عند قراءة الكود
     
     // استدعاء الدالة المخصصة للنجاح مع الكود المقروء
     onScanSuccess(decodedText);

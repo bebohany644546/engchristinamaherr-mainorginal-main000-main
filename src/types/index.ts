@@ -113,6 +113,7 @@ export interface Payment {
   group: string;
   month: string;
   date: string;
+  amount?: string; // قيمة المبلغ المدفوع
   paidMonths: PaidMonth[];
   // Supabase fields
   student_id?: string;

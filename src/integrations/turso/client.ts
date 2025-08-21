@@ -92,10 +92,19 @@ export const createTables = async () => {
         student_group TEXT NOT NULL,
         month TEXT NOT NULL,
         date TEXT DEFAULT CURRENT_TIMESTAMP,
+        amount TEXT,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (student_id) REFERENCES students(id)
       )
     `);
+
+    // إضافة عمود amount إذا لم يكن موجوداً (للجداول الموجودة مسبقاً)
+    try {
+      await turso.execute(`ALTER TABLE payments ADD COLUMN amount TEXT`);
+    } catch (error) {
+      // العمود موجود بالفعل أو خطأ آخر، نتجاهله
+      console.log("Column amount already exists or other error:", error);
+    }
 
     // إنشاء جدول الأشهر المدفوعة
     await turso.execute(`

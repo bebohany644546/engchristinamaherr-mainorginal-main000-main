@@ -1,11 +1,15 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useData } from "@/context/DataContext";
 import { useAuth } from "@/context/AuthContext";
 import { Logo } from "@/components/Logo";
 import { PhoneContact } from "@/components/PhoneContact";
-import { ArrowRight, Plus, Search, X, Edit, Trash2 } from "lucide-react";
+import { ArrowRight, Plus, Search, X, Edit, Trash2, Filter, UserX } from "lucide-react";
+import GradesAdvancedFilter, { GradesFilterCriteria } from "@/components/GradesAdvancedFilter";
+import StudentsNotExamined from "@/components/StudentsNotExamined";
+import { useGradesFilters } from "@/hooks/use-grades-filters";
+import ActionButton from "@/components/ActionButton";
 import { Student, Grade } from "@/types";
 import { getGradeDisplay, formatDate, sanitizeSearchText } from "@/lib/utils";
 import {
@@ -23,9 +27,12 @@ const GradesByGrade = () => {
   const { grade = "first" } = useParams<{ grade: "first" | "second" | "third" }>();
   const { getAllStudents } = useAuth();
   const { grades, addGrade, updateGrade, deleteGrade } = useData();
+  const { filterCriteria, filterGrades, applyFilter, clearFilters, hasActiveFilters, getFilterDescription } = useGradesFilters();
   const [students, setStudents] = useState<Student[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+  const [showStudentsNotExamined, setShowStudentsNotExamined] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchType, setSearchType] = useState<"name" | "code" | "group">("name");
 
@@ -187,29 +194,46 @@ const GradesByGrade = () => {
     }
   };
   
-  // Filter grades for the selected grade level
-  const filteredGrades = grades.filter(g => {
-    const student = students.find(s => s.id === g.studentId);
-    if (!student) return false;
-    
-    // إذا كان هناك بحث، قم بتصفية النتائج حسب نوع البحث
+  // Filter grades for the selected grade level using useMemo
+  const filteredGrades = useMemo(() => {
+    console.log("🎓 Filtering grades - Criteria:", filterCriteria);
+
+    // أولاً، فلترة الدرجات حسب الصف الدراسي
+    let gradesByLevel = grades.filter(g => {
+      const student = students.find(s => s.id === g.studentId);
+      return student && student.grade === grade;
+    });
+    console.log("📊 Grades for grade level:", gradesByLevel.length);
+
+    // ثانياً، تطبيق الفلاتر المتقدمة
+    if (filterCriteria.groupName || filterCriteria.selectedDate) {
+      console.log("🔍 Applying advanced filters...");
+      gradesByLevel = filterGrades(gradesByLevel, filterCriteria);
+    }
+
+    // ثالثاً، تطبيق البحث النصي
     if (searchTerm) {
       const query = sanitizeSearchText(searchTerm);
-      
-      switch (searchType) {
-        case "name":
-          return sanitizeSearchText(g.studentName).includes(query);
-        case "code":
-          return student.code ? sanitizeSearchText(student.code).includes(query) : false;
-        case "group":
-          return g.group ? sanitizeSearchText(g.group).includes(query) : false;
-        default:
-          return false;
-      }
+      gradesByLevel = gradesByLevel.filter(g => {
+        const student = students.find(s => s.id === g.studentId);
+        if (!student) return false;
+
+        switch (searchType) {
+          case "name":
+            return sanitizeSearchText(g.studentName).includes(query);
+          case "code":
+            return student.code ? sanitizeSearchText(student.code).includes(query) : false;
+          case "group":
+            return g.group ? sanitizeSearchText(g.group).includes(query) : false;
+          default:
+            return false;
+        }
+      });
     }
-    
-    return true;
-  });
+
+    console.log("✅ Final result:", gradesByLevel.length, "grades");
+    return gradesByLevel;
+  }, [grades, students, grade, filterCriteria, searchTerm, searchType, filterGrades]);
 
   return (
     <div className="min-h-screen bg-physics-navy flex flex-col relative">
@@ -238,15 +262,54 @@ const GradesByGrade = () => {
               <p className="text-white mt-1">{getGradeTitle()}</p>
             </div>
             
-            <button 
-              onClick={() => setShowAddForm(true)}
-              className="goldBtn flex items-center gap-2"
-            >
-              <Plus size={18} />
-              إضافة درجة
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <ActionButton
+                onClick={() => setShowAddForm(true)}
+                icon={Plus}
+                label="إضافة درجة"
+                variant="primary"
+              />
+
+              <ActionButton
+                onClick={() => setShowAdvancedFilter(true)}
+                icon={Filter}
+                label="فلتر متقدم"
+                variant="secondary"
+              />
+
+              <ActionButton
+                onClick={() => setShowStudentsNotExamined(true)}
+                icon={UserX}
+                label="الطلاب غير الممتحنين"
+                variant="danger"
+              />
+            </div>
           </div>
-          
+
+          {/* عرض الفلاتر المطبقة */}
+          {hasActiveFilters() && (
+            <div className="mb-6 p-4 bg-physics-navy/30 rounded-lg">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                  <h3 className="text-physics-gold font-bold mb-1">الفلاتر المطبقة:</h3>
+                  <p className="text-white text-sm">{getFilterDescription()}</p>
+                  <p className="text-physics-gold text-xs mt-1">
+                    عرض {filteredGrades.length} من أصل {grades.filter(g => {
+                      const student = students.find(s => s.id === g.studentId);
+                      return student && student.grade === grade;
+                    }).length} درجة
+                  </p>
+                </div>
+                <button
+                  onClick={clearFilters}
+                  className="text-red-400 hover:text-red-300 text-sm underline"
+                >
+                  إزالة جميع الفلاتر
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Search with Type Selector */}
           <div className="mb-6 flex flex-col md:flex-row gap-4">
             <div className="w-full md:w-1/4">
@@ -593,6 +656,23 @@ const GradesByGrade = () => {
           </div>
         </div>
       )}
+
+      {/* نافذة الفلتر المتقدم */}
+      <GradesAdvancedFilter
+        isOpen={showAdvancedFilter}
+        onClose={() => setShowAdvancedFilter(false)}
+        onApplyFilter={applyFilter}
+        currentCriteria={filterCriteria}
+      />
+
+      {/* نافذة الطلاب غير الممتحنين */}
+      <StudentsNotExamined
+        isOpen={showStudentsNotExamined}
+        onClose={() => setShowStudentsNotExamined(false)}
+        filterCriteria={filterCriteria}
+        grades={grades}
+        currentGrade={grade}
+      />
     </div>
   );
 };

@@ -11,40 +11,124 @@ export function usePayments() {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
+
+  // مدة التخزين المؤقت (5 دقائق)
+  const CACHE_DURATION = 5 * 60 * 1000;
 
   // Load data from Turso when hook initializes
   useEffect(() => {
     const initializePayments = async () => {
       try {
-        // إنشاء الجداول أولاً إذا لم تكن موجودة
-        await createTables();
-        
-        // ثم تحميل البيانات
+        // تحميل البيانات مباشرة (الجداول موجودة بالفعل)
         await fetchPayments();
       } catch (error) {
         console.error("Error initializing payments:", error);
-        toast({
-          title: "خطأ في تهيئة المدفوعات",
-          description: "تعذر تهيئة جداول المدفوعات",
-          variant: "destructive"
-        });
+        // في حالة فشل التحميل، جرب إنشاء الجداول ثم التحميل مرة أخرى
+        try {
+          console.log("Attempting to create tables and retry...");
+          await createTables();
+          await fetchPayments();
+        } catch (retryError) {
+          console.error("Retry failed:", retryError);
+          toast({
+            title: "خطأ في تهيئة المدفوعات",
+            description: "تعذر تحميل بيانات المدفوعات",
+            variant: "destructive"
+          });
+        }
       }
     };
 
     initializePayments();
   }, []);
 
-  // تحميل المدفوعات من Turso
-  const fetchPayments = async () => {
+  // تحميل المدفوعات من Turso بطريقة محسنة
+  const fetchPayments = async (forceRefresh = false) => {
     try {
+      // التحقق من التخزين المؤقت
+      const now = Date.now();
+      if (!forceRefresh && payments.length > 0 && (now - lastFetchTime) < CACHE_DURATION) {
+        console.log("Using cached payments data");
+        setIsLoading(false);
+        setIsInitialized(true);
+        return;
+      }
+
       setIsLoading(true);
-      
+
+      // استخدام JOIN لتحميل البيانات في استعلام واحد
+      const result = await turso.execute(`
+        SELECT
+          p.id,
+          p.student_id,
+          p.student_name,
+          p.student_code,
+          p.student_group,
+          p.month,
+          p.date,
+          p.amount,
+          pm.month as paid_month,
+          pm.date as paid_date
+        FROM payments p
+        LEFT JOIN paid_months pm ON p.id = pm.payment_id
+        ORDER BY p.date DESC, pm.date DESC
+      `);
+
+      // تجميع البيانات حسب payment_id
+      const paymentsMap = new Map<string, any>();
+
+      result.rows.forEach((row: any) => {
+        const paymentId = row.id;
+
+        if (!paymentsMap.has(paymentId)) {
+          paymentsMap.set(paymentId, {
+            id: row.id,
+            studentId: row.student_id,
+            studentName: row.student_name,
+            studentCode: row.student_code,
+            group: row.student_group,
+            month: row.month,
+            date: row.date,
+            amount: row.amount,
+            paidMonths: []
+          });
+        }
+
+        // إضافة الشهر المدفوع إذا كان موجوداً
+        if (row.paid_month) {
+          paymentsMap.get(paymentId).paidMonths.push({
+            month: row.paid_month,
+            date: row.paid_date
+          });
+        }
+      });
+
+      const processedPayments = Array.from(paymentsMap.values());
+      setPayments(processedPayments);
+      setLastFetchTime(Date.now());
+      console.log("Loaded payments from Turso (optimized):", processedPayments.length);
+    } catch (error) {
+      console.error("Error loading payments from Turso:", error);
+      // في حالة فشل الاستعلام المحسن، استخدم الطريقة القديمة
+      await fetchPaymentsLegacy();
+    } finally {
+      setIsLoading(false);
+      setIsInitialized(true);
+    }
+  };
+
+  // الطريقة القديمة كـ fallback
+  const fetchPaymentsLegacy = async () => {
+    try {
+      console.log("Using legacy fetch method...");
+
       // First, fetch all payments
-      const paymentsResult = await turso.execute("SELECT * FROM payments");
-      
+      const paymentsResult = await turso.execute("SELECT * FROM payments ORDER BY date DESC");
+
       // Then fetch all paid months
-      const paidMonthsResult = await turso.execute("SELECT * FROM paid_months");
-      
+      const paidMonthsResult = await turso.execute("SELECT * FROM paid_months ORDER BY date DESC");
+
       // Map the database data to our app's data structure
       const processedPayments = paymentsResult.rows.map((payment: any) => {
         // Find all paid months for this payment
@@ -54,7 +138,7 @@ export function usePayments() {
             month: pm.month,
             date: pm.date
           }));
-        
+
         return {
           id: payment.id,
           studentId: payment.student_id,
@@ -63,17 +147,16 @@ export function usePayments() {
           group: payment.student_group,
           month: payment.month,
           date: payment.date,
+          amount: payment.amount,
           paidMonths: relatedPaidMonths
         };
       });
-      
+
       setPayments(processedPayments);
-      console.log("Loaded payments from Turso:", processedPayments.length);
+      console.log("Loaded payments using legacy method:", processedPayments.length);
     } catch (error) {
-      console.error("Error loading payments from Turso:", error);
-    } finally {
-      setIsLoading(false);
-      setIsInitialized(true);
+      console.error("Legacy fetch also failed:", error);
+      throw error;
     }
   };
 
@@ -83,7 +166,8 @@ export function usePayments() {
     studentName: string,
     studentCode: string,
     group: string,
-    month: string
+    month: string,
+    amount?: string
   ) => {
     try {
       const date = new Date().toISOString();
@@ -148,9 +232,9 @@ export function usePayments() {
         const paymentId = generateId();
         
         await turso.execute({
-          sql: `INSERT INTO payments (id, student_id, student_name, student_code, 
-                student_group, month, date) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          args: [paymentId, studentId, studentName, studentCode, group, month, date]
+          sql: `INSERT INTO payments (id, student_id, student_name, student_code,
+                student_group, month, date, amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          args: [paymentId, studentId, studentName, studentCode, group, month, date, amount]
         });
 
         // Add initial paid month
@@ -168,11 +252,13 @@ export function usePayments() {
           group,
           month,
           date,
+          amount,
           paidMonths: [paidMonth]
         };
 
         // Update state
         setPayments(prevPayments => [...prevPayments, newPayment]);
+        setLastFetchTime(Date.now()); // تحديث وقت آخر تحديث
 
         return {
           success: true,
@@ -217,7 +303,8 @@ export function usePayments() {
       });
       
       console.log("Payment deleted successfully, state updated");
-      
+      setLastFetchTime(Date.now()); // تحديث وقت آخر تحديث
+
       return {
         success: true,
         message: "تم حذف سجل الدفع بنجاح"
@@ -289,8 +376,82 @@ export function usePayments() {
 
   // تحديث البيانات يدوياً
   const refreshPayments = async () => {
-    console.log("Manual refresh requested");
-    return await fetchPayments();
+    console.log("Manual refresh requested - forcing refresh");
+    return await fetchPayments(true); // force refresh
+  };
+
+  // Update payment
+  const updatePayment = async (paymentId: string, updatedData: Partial<Payment>) => {
+    try {
+      const payment = payments.find(p => p.id === paymentId);
+      if (!payment) {
+        return {
+          success: false,
+          message: "الدفعة غير موجودة"
+        };
+      }
+
+      // Update in Turso database
+      await turso.execute({
+        sql: "UPDATE payments SET student_name = ?, student_code = ?, student_group = ?, month = ?, date = ?, amount = ? WHERE id = ?",
+        args: [
+          updatedData.studentName || payment.studentName,
+          updatedData.studentCode || payment.studentCode,
+          updatedData.group || payment.group,
+          updatedData.month || payment.month,
+          updatedData.date || payment.date,
+          updatedData.amount || payment.amount,
+          paymentId
+        ]
+      });
+
+      // إذا تم تغيير الشهر، نحتاج لتحديث جدول paid_months أيضاً
+      if (updatedData.month && updatedData.month !== payment.month) {
+        // حذف الشهر القديم
+        await turso.execute({
+          sql: "DELETE FROM paid_months WHERE payment_id = ? AND month = ?",
+          args: [paymentId, payment.month]
+        });
+
+        // إضافة الشهر الجديد
+        await turso.execute({
+          sql: "INSERT INTO paid_months (id, payment_id, month, date) VALUES (?, ?, ?, ?)",
+          args: [generateId(), paymentId, updatedData.month, updatedData.date || payment.date]
+        });
+      }
+
+      // تحديث الحالة المحلية
+      const updatedPayment = { ...payment, ...updatedData };
+
+      // إذا تم تغيير الشهر، نحتاج لتحديث paidMonths أيضاً
+      if (updatedData.month && updatedData.month !== payment.month) {
+        updatedPayment.paidMonths = payment.paidMonths.map(pm =>
+          pm.month === payment.month
+            ? { ...pm, month: updatedData.month!, date: updatedData.date || payment.date }
+            : pm
+        );
+      }
+
+      setPayments(prevPayments =>
+        prevPayments.map(p =>
+          p.id === paymentId ? updatedPayment : p
+        )
+      );
+
+      setLastFetchTime(Date.now()); // تحديث وقت آخر تحديث
+
+      return {
+        success: true,
+        message: "تم تحديث الدفعة بنجاح",
+        payment: updatedPayment
+      };
+    } catch (error: any) {
+      console.error("Error updating payment:", error);
+      return {
+        success: false,
+        message: `حدث خطأ أثناء تحديث الدفعة: ${error.message || 'خطأ غير معروف'}`
+      };
+    }
   };
 
   return {
@@ -298,6 +459,7 @@ export function usePayments() {
     isLoading,
     addPayment,
     deletePayment,
+    updatePayment,
     getAllPayments,
     getStudentPayments,
     hasStudentPaidForCurrentLesson,

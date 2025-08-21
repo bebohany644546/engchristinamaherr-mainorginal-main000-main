@@ -1,16 +1,42 @@
 
 import { useState } from "react";
-import { Calendar, Search } from "lucide-react";
+import { Calendar, Search, DollarSign, Edit, Trash2 } from "lucide-react";
 import { Payment } from "@/types";
 import { sanitizeSearchText } from "@/lib/utils";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { toast } from "@/hooks/use-toast";
 
 interface PaymentsListProps {
   payments: Payment[];
+  onEditPayment?: (payment: Payment) => void;
+  onDeletePayment?: (paymentId: string) => void;
 }
 
-export function PaymentsList({ payments }: PaymentsListProps) {
+export function PaymentsList({ payments, onEditPayment, onDeletePayment }: PaymentsListProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchField, setSearchField] = useState<"name" | "code" | "group">("name");
+
+
+
+  // معالج تعديل الدفعة
+  const handleEdit = (payment: Payment) => {
+    if (onEditPayment) {
+      onEditPayment(payment);
+    }
+  };
+
+  // معالج حذف الدفعة
+  const handleDelete = (paymentId: string) => {
+    if (onDeletePayment) {
+      if (window.confirm("هل أنت متأكد من حذف هذه الدفعة نهائياً؟")) {
+        onDeletePayment(paymentId);
+        toast({
+          title: "✅ تم الحذف",
+          description: "تم حذف الدفعة بنجاح",
+        });
+      }
+    }
+  };
   
   // تنسيق التاريخ
   const formatDate = (dateString: string) => {
@@ -78,47 +104,77 @@ export function PaymentsList({ payments }: PaymentsListProps) {
           <p className="text-white text-lg">لا توجد مدفوعات مسجلة</p>
         </div>
       ) : (
-        <div className="divide-y divide-physics-navy">
-          {filteredPayments.map((payment) => (
-            <div key={payment.id} className="p-4 hover:bg-physics-navy/30">
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center">
-                <div>
-                  <h3 className="text-lg font-medium text-white">{payment.studentName}</h3>
-                  <div className="flex items-center flex-wrap gap-2 text-sm text-gray-300">
-                    <span>كود: {payment.studentCode}</span>
-                    <span className="hidden md:inline">|</span>
-                    <span>المجموعة: {payment.group}</span>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-physics-navy/50 text-physics-gold hover:bg-physics-navy/50">
+              <TableHead className="text-right">اسم الطالب</TableHead>
+              <TableHead className="text-right">كود الطالب</TableHead>
+              <TableHead className="text-right">المجموعة</TableHead>
+              <TableHead className="text-right">آخر دفعة</TableHead>
+              <TableHead className="text-right">قيمة المبلغ</TableHead>
+              <TableHead className="text-right">الأشهر المدفوعة</TableHead>
+              <TableHead className="text-center">الإجراءات</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredPayments.map((payment) => (
+              <TableRow key={payment.id} className="border-t border-physics-navy hover:bg-physics-navy/30">
+                <TableCell className="text-white font-medium">{payment.studentName}</TableCell>
+                <TableCell className="text-white">{payment.studentCode}</TableCell>
+                <TableCell className="text-white">{payment.group}</TableCell>
+                <TableCell className="text-white">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={14} className="text-physics-gold" />
+                    <span>{formatDate(payment.date)}</span>
                   </div>
-                </div>
-                
-                <div className="flex items-center mt-2 md:mt-0">
-                  <Calendar size={14} className="ml-1 text-physics-gold" />
-                  <span className="text-physics-gold">
-                    آخر دفعة: {formatDate(payment.date)}
-                  </span>
-                </div>
-              </div>
-              
-              {/* الأشهر المدفوعة */}
-              <div className="mt-4">
-                <p className="text-sm text-gray-400">
-                  الأشهر المدفوعة ({payment.paidMonths.length}):
-                </p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {payment.paidMonths.map((paidMonth, index) => (
-                    <span 
-                      key={index} 
-                      className="bg-physics-navy px-3 py-1 rounded-full text-sm text-white"
-                      title={`تاريخ الدفع: ${formatDate(paidMonth.date)}`}
-                    >
-                      {paidMonth.month}
+                </TableCell>
+                <TableCell className="text-white">
+                  <div className="flex items-center gap-1">
+                    <DollarSign size={14} className="text-physics-gold" />
+                    <span className="text-physics-gold font-bold">
+                      {payment.amount || "غير محدد"} جنيه
                     </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                  </div>
+                </TableCell>
+                <TableCell className="text-white">
+                  <div className="flex flex-wrap gap-1">
+                    {payment.paidMonths.map((paidMonth, index) => (
+                      <span
+                        key={index}
+                        className="bg-physics-navy px-2 py-1 rounded-full text-xs text-white border border-physics-gold/30"
+                        title={`تاريخ الدفع: ${formatDate(paidMonth.date)}`}
+                      >
+                        {paidMonth.month}
+                      </span>
+                    ))}
+                  </div>
+                </TableCell>
+                <TableCell className="text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    {onEditPayment && (
+                      <button
+                        onClick={() => handleEdit(payment)}
+                        className="p-1 text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 rounded transition-colors"
+                        title="تعديل الدفعة"
+                      >
+                        <Edit size={16} />
+                      </button>
+                    )}
+                    {onDeletePayment && (
+                      <button
+                        onClick={() => handleDelete(payment.id)}
+                        className="p-1 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
+                        title="حذف الدفعة"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       )}
     </div>
   );

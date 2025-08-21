@@ -17,9 +17,26 @@ export function PaymentForm({ onClose, onPaymentAdded }: PaymentFormProps) {
   const [searchField, setSearchField] = useState<"name" | "code" | "group">("name");
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [month, setMonth] = useState("");
+  const [amount, setAmount] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [searchResults, setSearchResults] = useState<Student[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // قائمة الأشهر الـ12
+  const monthOptions = [
+    "الشهر الأول",
+    "الشهر الثاني",
+    "الشهر الثالث",
+    "الشهر الرابع",
+    "الشهر الخامس",
+    "الشهر السادس",
+    "الشهر السابع",
+    "الشهر الثامن",
+    "الشهر التاسع",
+    "الشهر العاشر",
+    "الشهر الحادي عشر",
+    "الشهر الثاني عشر"
+  ];
   
   const { getAllStudents } = useAuth();
   const { addPayment } = usePayments();
@@ -84,7 +101,8 @@ export function PaymentForm({ onClose, onPaymentAdded }: PaymentFormProps) {
         selectedStudent.name,
         selectedStudent.code,
         selectedStudent.group || "",
-        month
+        month,
+        amount
       );
       
       if (result.success) {
@@ -199,15 +217,35 @@ export function PaymentForm({ onClose, onPaymentAdded }: PaymentFormProps) {
           </div>
         )}
         
-        {/* حقل الشهر - مدخل نصي */}
+        {/* حقل الشهر - قائمة اختيار */}
         <div>
-          <label className="block text-white mb-1 text-sm">اسم الشهر</label>
-          <input
-            type="text"
+          <label className="block text-white mb-1 text-sm">اختر الشهر</label>
+          <select
             className="inputField"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            placeholder="مثال: يناير 2024"
+            required
+          >
+            <option value="">اختر الشهر</option>
+            {monthOptions.map((monthOption, index) => (
+              <option key={index} value={monthOption}>
+                {monthOption}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* حقل قيمة المبلغ */}
+        <div>
+          <label className="block text-white mb-1 text-sm">قيمة المبلغ (جنيه)</label>
+          <input
+            type="number"
+            className="inputField"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="أدخل قيمة المبلغ..."
+            min="0"
+            step="0.01"
             required
           />
         </div>
@@ -216,7 +254,7 @@ export function PaymentForm({ onClose, onPaymentAdded }: PaymentFormProps) {
           <button 
             type="submit" 
             className="goldBtn flex-1"
-            disabled={!selectedStudent || !month || isSubmitting}
+            disabled={!selectedStudent || !month || !amount || isSubmitting}
           >
             {isSubmitting ? "جاري التسجيل..." : "تسجيل الدفعة"}
           </button>
