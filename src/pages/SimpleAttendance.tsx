@@ -10,50 +10,46 @@ import { useAuth } from "@/context/AuthContext";
 import { useData } from "@/context/DataContext";
 import { usePayments } from "@/hooks/use-payments";
 
-// دالة لتشغيل مؤثر صوتي بسيط
+// دالة لتشغيل المؤثر الصوتي المخصص
 const playConfirmationSound = async () => {
   try {
-    // طريقة 1: استخدام Web Audio API
-    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // استخدام الملف الصوتي المضاف للمشروع
+    const audio = new Audio('/موثر صوتي للتاكيد0.mp3');
+    audio.volume = 0.7; // مستوى صوت مناسب
 
-    // التأكد من أن AudioContext في حالة running
-    if (audioContext.state === 'suspended') {
-      await audioContext.resume();
-    }
-
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // نغمة تأكيد مميزة
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.2);
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.4);
-
-    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.8);
-
-    console.log("🔊 تم تشغيل المؤثر الصوتي");
+    await audio.play();
+    console.log("🔊 تم تشغيل المؤثر الصوتي للتأكيد");
   } catch (error) {
-    console.log("⚠️ فشل Web Audio API، جاري المحاولة بطريقة بديلة:", error);
+    console.log("⚠️ فشل تشغيل الملف الصوتي، جاري المحاولة بطريقة بديلة:", error);
 
-    // طريقة 2: استخدام HTML Audio كبديل
+    // طريقة بديلة: Web Audio API
     try {
-      // إنشاء نغمة بسيطة باستخدام data URL
-      const audioData = "data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIG2m98OScTgwOUarm7blmGgU7k9n1unEiBC13yO/eizEIHWq+8+OWT";
-      const audio = new Audio(audioData);
-      audio.volume = 0.3;
-      await audio.play();
-      console.log("🔊 تم تشغيل الصوت البديل");
-    } catch (audioError) {
-      console.log("⚠️ فشل تشغيل الصوت:", audioError);
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-      // طريقة 3: اهتزاز كبديل أخير (للهواتف)
+      if (audioContext.state === 'suspended') {
+        await audioContext.resume();
+      }
+
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+      oscillator.frequency.setValueAtTime(600, audioContext.currentTime + 0.3);
+
+      gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.8);
+
+      console.log("🔊 تم تشغيل الصوت البديل");
+    } catch (fallbackError) {
+      console.log("⚠️ فشل تشغيل الصوت البديل:", fallbackError);
+
+      // اهتزاز كبديل أخير
       if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
         console.log("📳 تم تشغيل الاهتزاز كبديل");
@@ -77,6 +73,8 @@ const SimpleAttendance = () => {
   const handleScanSuccess = (code: string) => {
     setScannedCode(code);
     setShowScanner(false);
+    // تشغيل المؤثر الصوتي
+    playConfirmationSound();
   };
   
   const handleRegisterAttendance = async () => {
